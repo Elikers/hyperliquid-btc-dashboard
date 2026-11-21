@@ -50,6 +50,16 @@ class CompactForwardTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             compact_observation(source,scores)
 
+    def test_each_timeframe_explicitly_blocks_discord(self):
+        source,scores=fixture()
+        source["30m"].pop("discordEligible")
+        with self.assertRaises(ValueError):
+            compact_observation(source,scores)
+        source,scores=fixture()
+        source["1h"]["discordEligible"]=True
+        with self.assertRaises(ValueError):
+            compact_observation(source,scores)
+
     def test_market_provenance_cannot_change(self):
         source,scores=fixture()
         source["15m"]["coin"]="ETH"
