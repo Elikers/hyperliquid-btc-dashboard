@@ -21,6 +21,8 @@ jobs:
           python-version: '3.12'
       - name: Collect closed public candles
         run: python -m research.capture_public_btc
+      - name: Evaluate seven-factor research only
+        run: python -m research.evaluate_public_snapshot
       - name: Upload research-only snapshots
         uses: actions/upload-artifact@v4
         with:
