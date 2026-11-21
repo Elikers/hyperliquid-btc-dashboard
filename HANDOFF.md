@@ -51,8 +51,15 @@
 - Daily paper audit only confirmed as successful push smoke, not as scheduled execution, in latest run history. Its configured daily schedule is 23:28 UTC.
 - Priority: rigorous schedule/candle coverage metrics and missing-data quarantine, then cumulative evidence and independent Pine parity. Do not activate any trading alerts.
 
+## Verified coverage milestone — 2026-11-22
+
+- [PR #5](https://github.com/Elikers/hyperliquid-btc-dashboard/pull/5) merged at [`956d9ba6`](https://github.com/Elikers/hyperliquid-btc-dashboard/commit/956d9ba620b0a8b4d10b450835c59160b0aca6c0): [`research/observation_coverage.py`](research/observation_coverage.py) computes full-window expected versus observed 15m/30m/1h closed-bar coverage, separately from paper trade lifecycle.
+- Verified [PR CI #44953904949](https://github.com/Elikers/hyperliquid-btc-dashboard/actions/runs/44953904949), [main CI #44953938041](https://github.com/Elikers/hyperliquid-btc-dashboard/actions/runs/44953938041) and **full daily-audit push smoke** [#44953938033](https://github.com/Elikers/hyperliquid-btc-dashboard/actions/runs/44953938033), whose uploaded artifact `14727350084` was inspected.
+- Actual 24h window ending 2026-11-21 21:54 UTC: 14 source artifacts, **15m 14/96 (14.6%), 30m 14/48 (29.2%), 1h 12/24 (50.0%)**, including leading and internal gaps; 0 hypothetical candidate setups. Not a full day of observed signals, no profit claims. Daily audit `event=schedule` unverified; only `event=push` proven.
+- Next check: scheduled-run timing/true artifact candle coverage, then cross-day continuous evidence and original-Pine reference parity. Do not activate real alerts/trading.
+
 ## Next unfinished task
-Check actual GitHub Actions runs for **multiple successful `event=schedule` 15-minute BTC captures** and the first successful `event=schedule` **daily paper audit**; do not infer cadence from the cron file. Build an evidence-preserving, cross-day cumulative paper ledger from successive retained audit/source artifacts, with calendar gaps, deduplicated candles, incomplete/open trades, and conservative illustrative fees. Keep an explicit minimum evidence threshold before reporting statistical performance; continue bar-by-bar original-Pine Macro-Off parity and ATR investigation. No live alerts, wallet trading, or performance promises.
+Investigate sparse observed GitHub scheduled capture cadence (13 successes with 41–63 minute run gaps against four intended runs/hour) and incomplete closed-candle coverage, using **separate metrics** for job execution and real unique bar closes. Then develop a durable, cross-day, non-lookahead research ledger with no fabricated historical-to-forward continuity. Continue independent Viprasol Classic Macro-Off Pine parity and known ATR difference; avoid profit or Discord claims until evidence gates pass.
 
 ## Prompt for any new chat
 > Partner, continue our Hyperliquid BTC development in `Elikers/hyperliquid-btc-dashboard`. Read `PROJECT_STATE.md`, `DECISIONS.md`, `HANDOFF.md`, and the current GitHub Actions runs before working. Continue from the next unfinished verified task without repeating previous questions. Preserve Viprasol Classic unchanged, the working dashboard, no live Discord trade signals, no wallet trading, and no unverified profit claims. Commit safe fixes and update the handoff only after confirming evidence.
