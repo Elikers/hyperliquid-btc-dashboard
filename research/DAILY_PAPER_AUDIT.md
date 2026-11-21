@@ -25,3 +25,9 @@ The daily report is intentionally a **rolling 24-hour window**, not a 30-day cum
 - This workflow does not modify `docs/`, send notifications, enable live alerts, create orders, or alter original Viprasol Classic settings.
 
 Use the [project handoff](../HANDOFF.md) and actual Actions logs rather than assuming a scheduled workflow has executed.
+
+## Closed-candle coverage measurement (November 22 improvement)
+
+The daily output now contains `closedCandleCoverage` for **15m, 30m, and 1h**, independently of the hypothetical trade ledger. For the rolling UTC window, it counts expected fully closed candle intervals, distinct timestamps actually observed in retained artifacts, and unobserved leading / interior / trailing candle closes. This prevents a sparse hourly Actions schedule from appearing complete merely because the gaps *between* a few observations are small. Duplicate source artifacts never increase the count. No historical candles are inserted to fill absent observations.
+
+These counts represent **observation coverage**, not successful GitHub cron execution rate. A failed or skipped scheduled job may result in an unobserved candle; a late capture can also repeat an earlier close. The coverage metric must not certify original Viprasol parity, win rate, live prices or profitability. All signals, Discord and wallet execution stay disabled.
