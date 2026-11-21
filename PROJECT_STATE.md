@@ -13,7 +13,7 @@ Develop a dependable, independently verified **Hyperliquid BTCUSDC perpetual** r
 | Browser-based live chart, 15m/30m/1h | Deployed; user previously confirmed the chart and prices worked. Not a permanently running backend | `docs/`, Pages workflow, user acceptance |
 | Offline research test suite | Latest checked main-branch research run **succeeded**, including safety gate | [run 44895978108](https://github.com/Elikers/hyperliquid-btc-dashboard/actions/runs/44895978108) |
 | Full public BTC capture and research evaluation | **One end-to-end push-triggered smoke run succeeded** | [run 44895884495](https://github.com/Elikers/hyperliquid-btc-dashboard/actions/runs/44895884495), [verified report](research/VERIFIED_CAPTURE_RUN_2026-11-21.md) |
-| 15-minute GitHub Actions capture schedule | Configured at `:02, :17, :32, :47 UTC`; **successful `event=schedule` run not yet verified at review time** | [workflow](.github/workflows/btc-forward-capture.yml). Scheduled jobs can be delayed/skipped |
+| 15-minute GitHub Actions capture schedule | Configured at `:02, :17, :32, :47 UTC`; **one successful scheduled capture verified**, ongoing cadence still not established | [workflow](.github/workflows/btc-forward-capture.yml). Scheduled jobs can be delayed/skipped |
 | Cross-timeframe candle checks | Enabled: 30m/1h OHLCV reconstructed from 15m; failed inputs block scoring | `research/cross_timeframe_audit.py` |
 | Source-supported Viprasol Classic, macro OFF | Seven-factor research evaluator with EMA9/21 entry gates and ADR14 checks; **not Pine-parity verified** | `research/classic_macro_off.py`; `research/adr_gate.py` |
 | Original Viprasol macro ON | 8-factor research audit; real `CME_MINI:NQ1!` symbol, continuous roll/session parity unresolved | `research/eight_factor_audit.py` |
@@ -37,8 +37,15 @@ Develop a dependable, independently verified **Hyperliquid BTCUSDC perpetual** r
 - **This is the offline analysis engine, not yet unattended artifact ingestion or historical profitable results.** [Usage and limits](research/FORWARD_PAPER_LEDGER.md).
 - As of this check, only a previously verified **push-triggered** BTC capture ([#44895884495](https://github.com/Elikers/hyperliquid-btc-dashboard/actions/runs/44895884495)) was present. Successful recurring scheduled runs have **not** been confirmed.
 
+## Engineering update — 2026-11-21, scheduled capture and paper audit rollout
+
+- Verified the first successful scheduled public BTC capture: [Actions #44897289838](https://github.com/Elikers/hyperliquid-btc-dashboard/actions/runs/44897289838), `event=schedule`, full pipeline and paper artifacts. This proves one scheduled run, not continuous reliability.
+- Implemented and merged [PR #3](https://github.com/Elikers/hyperliquid-btc-dashboard/pull/3), commit `602fd6e455e0889ec6255cf663f903a3d548dad0`: read-only artifact listing/download, compact ZIP verification, feed into existing paper ledger and a daily audit GitHub Actions workflow. The PR offline suite [#44897696487](https://github.com/Elikers/hyperliquid-btc-dashboard/actions/runs/44897696487) passed.
+- **The first end-to-end daily audit run failed**: [Actions #44897739711](https://github.com/Elikers/hyperliquid-btc-dashboard/actions/runs/44897739711), 401 while downloading an Actions artifact from external signed storage after GitHub's 302 redirect. Unit tests had passed (186), but that was insufficient.
+- [Fix PR #4](https://github.com/Elikers/hyperliquid-btc-dashboard/pull/4) strips the bearer token from cross-host signed artifact redirects, validates HTTPS/host, and adds tests. **Not yet merged or CI-verified as of this update.** Do not report daily audit production success until a real smoke run uploads a valid report.
+
 ## Specific unresolved evidence
-1. **Scheduled recurrence:** GitHub Actions `event=schedule` success and coverage across multiple hours have not been independently established. The verified smoke run was `event=push`.
+1. **Scheduled recurrence:** First real `event=schedule` capture **succeeded** in [run #44897289838](https://github.com/Elikers/hyperliquid-btc-dashboard/actions/runs/44897289838), 2026-11-21 11:03 UTC. Multiple-hour coverage and missed-trigger rate remain unverified.
 2. **Bar-by-bar parity:** Need independent original-Pine closed-bar factors, zero-signal periods, LONG/SHORT entry times and exits across all three timeframes; unit tests and model-vs-model comparisons are insufficient.
 3. **ATR discrepancy:** On a 2026-11-20 reference LONG, Python stop ≈61,667.3978 vs screenshot ≈61,667.1 (difference ≈0.2978). Numerous ATR warmup seeds converge; source candle/provider/settings parity remains unresolved. See [diagnosis](research/FEED_PARITY_ATR_DIAGNOSIS_2026-11-21.md).
 4. **Profit:** Older 35 candidate examples (not verified Classic events) yielded 20 SL, 9 BE, 6 TP3, summed gross -2R under a simplified full-position model. The 15m historical export was too short to certify ADR14. **Do not quote this as strategy win rate or expected return.**
@@ -46,7 +53,7 @@ Develop a dependable, independently verified **Hyperliquid BTCUSDC perpetual** r
 6. **Live service:** No always-on monitoring server; GitHub Pages is browser-only and scheduled Actions are not 24/7 real-time alert delivery.
 
 ## Priorities (execute sequentially; no routine user approvals)
-P0 Verify schedule execution and failed jobs using live GitHub API; record exact run links and conclusions. P1 **Offline ledger implemented and CI verified**. Next connect read-only artifact discovery/replay and check missing bars without enabling alerts. P2 Pursue independent Pine parity and ATR discrepancies without changing original thresholds. P3 Evaluate out-of-sample net expectancy, drawdown and execution assumptions. P4 Consider secure continuous hosting and Discord only after an explicit readiness and risk review.
+P0 **First scheduled run verified**, monitor multiple-hour continuity and failed jobs via live GitHub API. P1 **Offline ledger implemented and CI verified**. Next connect read-only artifact discovery/replay and check missing bars without enabling alerts. P2 Pursue independent Pine parity and ATR discrepancies without changing original thresholds. P3 Evaluate out-of-sample net expectancy, drawdown and execution assumptions. P4 Consider secure continuous hosting and Discord only after an explicit readiness and risk review.
 
 ## Operational rules
 - Read [DECISIONS.md](DECISIONS.md) before modifying strategy or infrastructure.
