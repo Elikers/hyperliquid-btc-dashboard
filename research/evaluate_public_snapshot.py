@@ -76,6 +76,9 @@ def main():
     results=score_snapshots()
     target=Path("capture-output/research_candidates.json")
     target.write_text(json.dumps(results,indent=2)+"\n",encoding="utf-8")
+    for tf, item in results["candleIntegrity"]["timeframes"].items():
+        print(f"OHLCV integrity {tf}: {item['complete_groups']} full groups,"
+              f" {item['mismatch_count']} mismatches")
     for tf, d in results["timeframes"].items():
         print(f"{tf}: bull {d['bullScoreSeven']}/7, bear {d['bearScoreSeven']}/7,"
               f" raw cross={d['rawCrossover'] or 'none'};"
