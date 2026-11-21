@@ -14,8 +14,8 @@ FIELDS=("o","h","l","c","v")
 
 
 def compact_observation(snapshot, scores):
-    if snapshot.get("discordEligible") is not False or scores.get("discordEligible") is not False:
-        raise ValueError("Unverified source must explicitly block Discord")
+    if scores.get("discordEligible") is not False:
+        raise ValueError("Unverified research score must explicitly block Discord")
     if scores.get("originalViprasolVerified") is not False:
         raise ValueError("Unverified research result cannot claim Pine parity")
     if scores.get("liveSignalAlerts") is not False:
@@ -38,6 +38,8 @@ def compact_observation(snapshot, scores):
             raise ValueError("Missing market or research timeframe: "+tf)
         if item.get("timeframe")!=tf or item.get("coin")!="BTC":
             raise ValueError("Unexpected exchange market")
+        if item.get("discordEligible") is not False:
+            raise ValueError("Unverified exchange snapshot must block Discord")
         if item.get("capturedAtUtc")!=captured:
             raise ValueError("Mixed observation instants")
         if research.get("configuration")!="VIPRASOL_CLASSIC_MACRO_OFF":
