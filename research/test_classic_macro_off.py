@@ -36,7 +36,7 @@ class ClassicMacroOffTests(unittest.TestCase):
 
     def test_one_hour_macro_off(self):
         btc=bars("1h")
-        confirm=bars("15m")
+        confirm=bars("15m",days=17)
         r=evaluate_classic_macro_off(btc,confirm,timeframe="1h",
                                      current_ms=btc[-1]["T"]+1000)
         self.assertTrue(r["adr"]["available"])
