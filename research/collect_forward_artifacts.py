@@ -16,6 +16,7 @@ from urllib.parse import urlsplit
 import zipfile
 
 from research.forward_paper_ledger import analyze_forward_records
+from research.observation_coverage import observation_coverage
 
 PREFIX="btc-paper-evidence-"
 MAX_ARCHIVE_BYTES=2_000_000
@@ -153,6 +154,10 @@ def collect_daily(repo,token,*,now=None,lookback_hours=24,
         data=_read(url,token,opener=opener)
         records.append(decode_paper_archive(data))
     results=analyze_forward_records(records,one_way_cost_bps=7)
+    # The ledger validates integrity and trading-disabled flags before we
+    # measure expected-vs-observed closes over the ENTIRE requested window.
+    results["closedCandleCoverage"]=observation_coverage(
+        records,after=after,through=now)
     for tf,entry in results["byTimeframe"].items():
         entry["performanceSufficient"]=False
     results["collection"]={"repository":repo,"lookbackHours":lookback_hours,
@@ -187,6 +192,10 @@ def main():
               "missing:",stat["missingBars"],
               "hypothetical setups:",stat["hypotheticalCandidates"],
               "resolved:",stat["resolved"])
+    for tf,score in result["closedCandleCoverage"]["byTimeframe"].items():
+        print(tf,"coverage:",score["observedUniqueClosedBars"],"/",
+              score["expectedClosedBars"],"closed candles; unobserved:",
+              score["unobservedClosedBars"])
     print("Profitability and Pine parity NOT verified; Discord and trading OFF")
 
 
