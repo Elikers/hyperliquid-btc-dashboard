@@ -1,5 +1,9 @@
 import unittest
-from research.capture_public_btc import capture_one
+import os
+import tempfile
+from pathlib import Path
+from unittest.mock import patch
+from research.capture_public_btc import capture_one, main
 from research.parity_checks import TF_MS
 
 
@@ -65,6 +69,28 @@ class CaptureTests(unittest.TestCase):
         }
         self.assertGreaterEqual(lookback_ms["15m"], lookback_ms["1h"])
         self.assertGreaterEqual(lookback_ms["30m"], lookback_ms["1h"])
+
+    def test_main_uses_same_observation_time_for_every_timeframe(self):
+        seen=[]
+        fixed=1234567890000
+        def fake_capture(tf, *, now_ms):
+            seen.append((tf,now_ms))
+            return {"timeframe":tf,"capturedAtUtc":"2009-02-13T23:31:30+00:00",
+                    "closedCandles":[],"discordEligible":False}
+        original=os.getcwd()
+        with tempfile.TemporaryDirectory() as tmp:
+            try:
+                os.chdir(tmp)
+                with patch("research.capture_public_btc.capture_one",
+                           side_effect=fake_capture):
+                    with patch("research.capture_public_btc.time.time",
+                               return_value=fixed/1000):
+                        main()
+                self.assertEqual([tf for tf,_ in seen],list(TF_MS))
+                self.assertEqual({ms for _,ms in seen},{fixed})
+                self.assertTrue(Path("capture-output/STATUS.txt").exists())
+            finally:
+                os.chdir(original)
 
     def test_rejects_unknown_timeframe(self):
         with self.assertRaises(ValueError):
