@@ -60,3 +60,18 @@ The standard-library `parity_checks.py` rejects missing/gapped/invalid candle in
 ### Why alerts are still OFF
 
 Original Pine calculates the NQ1! EMA inside `request.security` on the futures instrument before merging it onto BTC candles. A clean, aligned set of arbitrary BTC/NQ candles is *not* necessarily the same as TradingView's macro series, and a verified license alone does not prove equivalent roll sessions. VWAP session anchoring and 15m `request.security` merging also require exchange-matched parity checks. All audit functions hardcode `discordEligible=False` and `originalViprasolVerified=False`, regardless of test scores.
+
+## Native NQ1! session-gap alignment (new)
+
+- [`futures_alignment.py`](futures_alignment.py) uses only futures bars already closed before a BTC bar; computes the NQ EMA **before** forward joining onto 24/7 BTC candles; rejects duplicated/invalid exchange bars and marks stale CME observations unavailable. In particular, it doesn't treat a Saturday/Sunday market closure as corrupt futures history.
+- [`native_macro_audit.py`](native_macro_audit.py) connects that join to the existing seven-factor calculations, Pearson macro vote, entry gates and ATR ladder. Synthetic regression tests are in [`test_futures_alignment.py`](test_futures_alignment.py) and [`test_native_macro_audit.py`](test_native_macro_audit.py).
+- These functions are still *research only* and cannot emit Discord signals. A naive daily/UTC alignment or an EMA calculated on forward-filled CME bars is **not** a Pine-equivalent implementation.
+
+**Official-source research (2026-11-21):** [Hyperliquid documents a 5000 recent-candle limit](https://hyperliquid.gitbook.io/Hyperliquid-docs/for-developers/api/info-endpoint). [CME Group lists licensed real-time/historical data services](https://www.cmegroup.com/market-data/market-data-api.html), plus [licensed distributors](https://www.cmegroup.com/market-data/license-data/licensed-market-data-distributors.html). Public delayed CME **quotes** alone do not provide a verified, continuous, timestamp-aligned historical `CME_MINI:NQ1!` feed. We will not scrape protected quotes or replace CME data with `NQ=F` silently.
+
+### Verification evidence still missing
+
+1. A rights-compliant source for native NQ futures OHLC bars, exact symbol/roll policy, and evidence of access terms;
+2. Replay proof that Pine `request.security` session/time-merge and `ta.vwap` match our implementation;
+3. Exact bar-by-bar factors, both missed and extra LONG/SHORT signals, and ATR/TP levels on independent datasets;
+4. Forward evidence after costs and feed outages. **No live trading or Discord trade-alert activation.**
