@@ -80,10 +80,21 @@ def replay_csv(candidate_file,candle_file,*,one_way_cost_bps=0):
         if tf not in TIMEFRAMES:
             raise ValueError("Unexpected candle timeframe")
         candles_by_tf[tf].append(candle)
+    step_ms={"15m":900000,"30m":1800000,"1h":3600000}
+    known_times={}
     for tf,candles in candles_by_tf.items():
         candles.sort(key=lambda c:int(c["T"]))
-        if len(set(int(c["T"]) for c in candles))!=len(candles):
+        timestamps=[int(c["T"]) for c in candles]
+        if len(set(timestamps))!=len(candles):
             raise ValueError("Duplicate candle close")
+        if any(b-a!=step_ms[tf] for a,b in zip(timestamps,timestamps[1:])):
+            raise ValueError("Gap in price history; trade outcome cannot be certified")
+        known_times[tf]=set(timestamps)
+    for event in candidates:
+        if event["timeframe"] not in TIMEFRAMES:
+            raise ValueError("Unsupported candidate timeframe")
+        if int(event["T"]) not in known_times[event["timeframe"]]:
+            raise ValueError("Signal candle missing from supplied history")
     trades=[replay_one(event,candles_by_tf[event["timeframe"]],
                        one_way_cost_bps=one_way_cost_bps)
             for event in candidates]
@@ -117,9 +128,15 @@ def replay_csv(candidate_file,candle_file,*,one_way_cost_bps=0):
 
 
 def main():
-    root=Path("research")
-    result=replay_csv(root/"reference_7factor_candidates.csv",
-        root/"reference_btc_candles.csv",one_way_cost_bps=7)
+    import argparse
+    parser=argparse.ArgumentParser(
+        description="Replay independent 7-factor research CSVs (not Pine parity)")
+    parser.add_argument("--candidates",type=Path,required=True)
+    parser.add_argument("--candles",type=Path,required=True)
+    parser.add_argument("--one-way-cost-bps",type=float,default=7)
+    args=parser.parse_args()
+    result=replay_csv(args.candidates,args.candles,
+                      one_way_cost_bps=args.one_way_cost_bps)
     print(json.dumps(result,indent=2))
 
 
