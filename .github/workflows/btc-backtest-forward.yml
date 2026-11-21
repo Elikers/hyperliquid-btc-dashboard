@@ -1,0 +1,52 @@
+name: BTC historical research backtest and forward audit
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/btc-backtest-forward.yml'
+      - 'research/backtest_real_btc_snapshot.py'
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: btc-research-backtest-forward
+  cancel-in-progress: false
+jobs:
+  research:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify research safety
+        run: |
+          python -m compileall -q research
+          python -m unittest discover -s research -p 'test_*.py' -q
+      - name: Backtest real stored public BTC historical snapshots
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          python -m research.backtest_real_btc_snapshot \
+            --repo "${{ github.repository }}" \
+            --out test-output/historical_backtest.json
+      - name: Audit actual forward evidence separately
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          python -m research.collect_forward_artifacts \
+            --repo "${{ github.repository }}" \
+            --hours 24 \
+            --max-artifacts 250 \
+            --out test-output/forward_audit.json
+      - name: Upload historical and forward RESEARCH-ONLY evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: btc-backtest-forward-research-${{ github.run_id }}
+          path: test-output/*.json
+          retention-days: 90
+          if-no-files-found: error
