@@ -67,6 +67,8 @@ def schedule_reliability(runs, *, after, through):
         "windowStartUtc": first.isoformat(),
         "windowEndUtc": last.isoformat(),
         "configuredCronUtc": "7,12,22,27,37,42,52,57 * * * *",
+        "configuredOpportunityCountUsesCurrentCronForEntireWindow": True,
+        "comparisonCanBeMisleadingAcrossCronChanges": True,
         "configuredCronOpportunities": expected,
         "observedScheduledRunCount": len(sorted_runs),
         "completedSuccesses": status_counts.get("success", 0),
