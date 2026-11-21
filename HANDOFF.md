@@ -21,8 +21,15 @@
 - One known ATR/SL mismatch: +0.2978 USDC research minus reference for a November 20 15m LONG, explained in [ATR diagnosis](research/FEED_PARITY_ATR_DIAGNOSIS_2026-11-21.md).
 - User-facing GitHub Pages chart was previously confirmed functioning. No 24/7 server, Discord trade alerts or automatic wallet trading.
 
+## New verified milestone — 2026-11-21
+
+- Merged [PR #2](https://github.com/Elikers/hyperliquid-btc-dashboard/pull/2) as [`cdf2b0c5`](https://github.com/Elikers/hyperliquid-btc-dashboard/commit/cdf2b0c5be46a7e0d39843498e3414e4310f4021), adding [`research/forward_paper_ledger.py`](research/forward_paper_ledger.py), [11 regression tests](research/test_forward_paper_ledger.py), and [usage/limitations](research/FORWARD_PAPER_LEDGER.md).
+- Verified [pull request CI #44897218955](https://github.com/Elikers/hyperliquid-btc-dashboard/actions/runs/44897218955) **success** and [main push CI #44897257025](https://github.com/Elikers/hyperliquid-btc-dashboard/actions/runs/44897257025) **success**.
+- Ledger deduplicates each closed timeframe bar, checks immutable digest and candidate provenance, quarantines missing bars, computes research-only hypothetical outcomes after entry candle, and never enables Discord or trading.
+- **Not yet integrated into autonomous artifact fetching or periodic reporting.** No claim of real trading profitability; scheduled `event=schedule` run remains unverified.
+
 ## Next unfinished task
-**Verify successful `event=schedule` 15-minute research captures; if no runs exist, diagnose Actions scheduling/default-branch and do not invent uptime.** Then build deduplicated, closed-bar-only paper-trade outcomes from multiple forward artifacts with missing-run tracking and conservative fee/slippage uncertainty. Continue full source parity checks independently. See priorities in `PROJECT_STATE.md`.
+**Verify a genuine `event=schedule` 15-minute research capture.** If none exists, diagnose schedule and permissions without claiming uptime. **Next engineering integration:** connect the already implemented offline paper ledger to read-only discovery/download of retained compact GitHub Actions artifacts, produce coverage and outcomes only on available future observations, flag gaps, and validate through GitHub CI. Continue independent Pine parity work. Continue full source parity checks independently. See priorities in `PROJECT_STATE.md`.
 
 ## Prompt for any new chat
 > Partner, continue our Hyperliquid BTC development in `Elikers/hyperliquid-btc-dashboard`. Read `PROJECT_STATE.md`, `DECISIONS.md`, `HANDOFF.md`, and the current GitHub Actions runs before working. Continue from the next unfinished verified task without repeating previous questions. Preserve Viprasol Classic unchanged, the working dashboard, no live Discord trade signals, no wallet trading, and no unverified profit claims. Commit safe fixes and update the handoff only after confirming evidence.
