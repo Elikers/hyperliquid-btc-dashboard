@@ -1,6 +1,6 @@
 """Capture public, closed Hyperliquid BTC candles without trading or secrets.
 
-Run in GitHub Actions hourly and upload JSON artifacts (not Git commits).
+Run in GitHub Actions every 15 minutes and upload JSON artifacts (not Git commits).
 This is scheduled RESEARCH SAMPLING, NOT continuous signal monitoring.
 """
 from datetime import datetime, timezone
@@ -63,8 +63,12 @@ def capture_one(timeframe, *, now_ms=None, fetch=make_request):
 def main():
     root=Path("capture-output")
     root.mkdir(exist_ok=True)
+    # Freeze the observation timestamp for all three independent API calls.
+    # Otherwise a 15m boundary between requests gives inconsistent close
+    # cutoffs and mismatched confirmation-bar context.
+    capture_time_ms=int(time.time()*1000)
     for tf in TF_MS:
-        data=capture_one(tf)
+        data=capture_one(tf,now_ms=capture_time_ms)
         path=root/f"btc_{tf}.json"
         path.write_text(json.dumps(data,indent=2)+"\n",encoding="utf-8")
         print(f"{tf}: {len(data['closedCandles'])} checked closed bars -> {path}")
