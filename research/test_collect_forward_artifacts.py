@@ -170,10 +170,12 @@ class CollectTests(unittest.TestCase):
         pages=[]
         def opener(request,timeout=30):
             pages.append(request.full_url)
+            if "/workflows/btc-forward-capture.yml/runs" in request.full_url:
+                return Response(json.dumps({"workflow_runs":[]}).encode())
             return Response(json.dumps({"artifacts":old}).encode())
         data=collect_daily("Elikers/hyperliquid-btc-dashboard","t",
                            now=NOW,opener=opener)
-        self.assertEqual(len(pages),1)
+        self.assertEqual(len(pages),2)  # artifact page plus scheduled-run page
         self.assertEqual(data["collection"]["artifactCount"],0)
 
     def test_explicit_limit(self):
