@@ -20,6 +20,7 @@ class ScheduleAuditTests(unittest.TestCase):
         self.assertEqual(result["observedScheduledRunCount"],1)
         self.assertEqual(result["completedSuccesses"],1)
         self.assertFalse(result["exactMissedCronSlotsVerified"])
+        self.assertTrue(result["comparisonCanBeMisleadingAcrossCronChanges"])
         self.assertFalse(result["profitabilityClaimAllowed"])
 
     def test_failed_and_pending_are_not_success(self):
