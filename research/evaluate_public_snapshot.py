@@ -10,6 +10,7 @@ from datetime import datetime, timezone
 from research.parity_checks import TF_MS
 from research.pipeline import calculate_research_candidate
 from research.btc_only_lab import evaluate_btc_only_lab
+from research.classic_macro_off import evaluate_classic_macro_off
 
 
 def score_snapshots(folder="capture-output"):
@@ -25,6 +26,7 @@ def score_snapshots(folder="capture-output"):
         loaded[timeframe]=d
     evidence={}
     lab_evidence={}
+    macro_off_evidence={}
     for timeframe in TF_MS:
         d=loaded[timeframe]
         captured=datetime.fromisoformat(d["capturedAtUtc"])
@@ -45,9 +47,16 @@ def score_snapshots(folder="capture-output"):
         if lab["discordEligible"] or lab["originalViprasolVerified"]:
             raise RuntimeError("Unverified Lab must never enable alerts")
         lab_evidence[timeframe]=lab
+        macro_off=evaluate_classic_macro_off(d["closedCandles"],
+            loaded["15m"]["closedCandles"],timeframe=timeframe,
+            current_ms=sampled_at)
+        if macro_off["discordEligible"] or macro_off["originalViprasolVerified"]:
+            raise RuntimeError("Macro-OFF Classic must remain research only")
+        macro_off_evidence[timeframe]=macro_off
     return {"kind":"public_btc_seven_factor_forward_research",
             "capturedAtUtc":loaded["15m"]["capturedAtUtc"],
             "timeframes":evidence,"btcOnlyLab":lab_evidence,
+            "viprasolClassicMacroOff":macro_off_evidence,
             "originalViprasolVerified":False,
             "discordEligible":False,"liveSignalAlerts":False,
             "limitations":["No original CME_MINI:NQ1! factor",
