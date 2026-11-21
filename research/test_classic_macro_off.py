@@ -48,6 +48,16 @@ class ClassicMacroOffTests(unittest.TestCase):
                                      current_ms=x[-1]["t"]+1000)
         self.assertEqual(r["closedThroughMs"],x[-2]["T"])
 
+    def test_original_threshold_eight_clamps_to_seven(self):
+        x=bars()
+        result=evaluate_classic_macro_off(x,x,timeframe="15m",
+                                         current_ms=x[-1]["T"]+1000,
+                                         min_score=8)
+        self.assertEqual(result["originalInputMinScore"],8)
+        self.assertEqual(result["scoreThreshold"],7)
+        self.assertEqual(result["scoreDenominator"],7)
+        self.assertFalse(result["discordEligible"])
+
     def test_wrong_min_score_rejected(self):
         x=bars()
         with self.assertRaises(ValueError):
