@@ -122,6 +122,9 @@ class CollectTests(unittest.TestCase):
         self.assertEqual(output["byTimeframe"]["15m"]["uniqueClosedBars"],1)
         self.assertFalse(output["profitabilityClaimAllowed"])
         self.assertFalse(output["discordEligible"])
+        self.assertIn("closedCandleCoverage",output)
+        self.assertGreater(output["closedCandleCoverage"]["byTimeframe"]["15m"]["unobservedClosedBars"],0)
+        self.assertFalse(output["closedCandleCoverage"]["profitabilityClaimAllowed"])
 
     def test_missing_artifacts_not_profitable(self):
         def empty(request,timeout=30):
