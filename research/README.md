@@ -81,3 +81,16 @@ Original Pine calculates the NQ1! EMA inside `request.security` on the futures i
 A separately labeled [BTC-only 7-factor Lab](btc_only_lab.py) now computes hypothetical research candidates without NQ1!. It does **not** inherit Classic's eight-factor parity claim; the ADR gate is deliberately disabled and disclosed in Lab until daily-input parity is verified. [Regression tests](test_btc_only_lab.py) assert that it never produces trade alerts.
 
 The 15-minute scheduled [research evaluator](evaluate_public_snapshot.py) writes both blocked Classic observations and `btcOnlyLab` hypothetical observations into the same GitHub Actions JSON artifact. Results are forward samples for **research**, not validated entry recommendations. Fees, execution slippage and risk-adjusted profitability remain unproven. All wallet actions and webhook sending are absent.
+
+## New practical route: original Viprasol Classic, Nasdaq factor OFF
+
+The *original supplied Pine v6* includes `macroFactorOnInput = input.bool(true, ...)`, sets `factorTotal = macroFactorOnInput ? 8 : 7`, and uses `minScoreEff = min(minScoreInput, factorTotal)`. Therefore the user's baseline **already supports disabling the macro factor**, without needing a paid NQ1! feed. This is not an invented replacement strategy.
+
+[`classic_macro_off.py`](classic_macro_off.py) implements the **source-supported 7-factor Classic configuration**, including EMA crossovers, Europe/US sessions, weekend restrictions, and the [14 completed UTC-day ADR gate](adr_gate.py). [Its tests](test_classic_macro_off.py) assert Nasdaq is not required, ADR history is checked, unfinished candles are ignored, and alerts stay disabled. The separate BTC-only Lab does not currently enforce ADR and must not be conflated with this Classic configuration.
+
+The scheduled research artifact now contains three explicitly distinguished outputs:
+- `timeframes`: prior seven-factor diagnostic blocked by unverified NQ1!;
+- `viprasolClassicMacroOff`: original source's supported **macro OFF** configuration, research-only;
+- `btcOnlyLab`: separately experimental BTC-only model with ADR disabled.
+
+**Path to operational signals:** Validate VWAP session anchoring, 15m confirmation merge, EMA/RSI/MACD/ADX and ATR against the source and independent reference events; test net results after fees/slippage; only then consider enabling notification delivery. Even Macro-Off Classic is not yet parity-verified or proven profitable. The original Macro-On eight-factor version stays intact and blocked pending actual NQ1! data.
