@@ -41,8 +41,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
-          python -m research.instant_paper_comparison \\
-            --repo "${{ github.repository }}" \\
+          python -m research.instant_paper_comparison \
+            --repo "${{ github.repository }}" \
             --out test-output/instant_paper_comparison.json
       - name: Audit actual forward evidence separately
         env:
