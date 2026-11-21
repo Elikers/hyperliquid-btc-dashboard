@@ -7,3 +7,5 @@ The redundant cron was merged and first push-smoked on **2026-11-21 at 23:04:46 
 `fullPostRolloutWindowAvailable` remains false until **2026-11-22 23:15:00 UTC** (November 23 at 07:15 Asia/Manila), and even afterwards marks the pilot only `READY_FOR_MANUAL_EVIDENCE_REVIEW`, not a reliability pass. At least one full clean observation window and measured market-data/capture evidence are necessary before comparing. GitHub Actions may delay or drop scheduled triggers.
 
 No changes to Viprasol Classic factors/thresholds/ATR/Entry/SL/TP, the Pages dashboard, Discord, wallet trading or profit authorization.
+
+After the first complete day, the metric uses a **rolling 24-hour UTC window** beginning at `max(clean_pilot_start, report_time - 24h)`. This avoids penalizing later reports for archived observations outside the rolling collection horizon. Reports remain ineligible for any automatic reliability approval; schedule delay and skipped triggers are still possible.
