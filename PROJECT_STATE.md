@@ -53,6 +53,13 @@ Develop a dependable, independently verified **Hyperliquid BTCUSDC perpetual** r
 - [Daily workflow](.github/workflows/btc-paper-audit.yml) is configured for `23:28 UTC`, with rolling 24h artifact inputs and 90-day audit-report retention. **One successful push smoke does not establish that the daily schedule has executed.** [Implementation/limitations](research/DAILY_PAPER_AUDIT.md).
 - Next work: monitor more `event=schedule` capture and audit executions; build durable cross-day cumulative research reporting (daily 24h reports are not yet a 30-day trade history), and obtain independent source-Pine parity evidence before any profitability or Discord claims.
 
+## Recurring capture audit — November 22, 2026 (Asia/Manila)
+
+- Rechecked connected GitHub Actions history, current `main` commit `36fe95119667d0344834d3a640d6a012988375e9`. **13 genuine `event=schedule` capture runs succeeded**, spanning 2026-11-21 11:03:53 to 21:24:31 UTC, most recent [#44951382679](https://github.com/Elikers/hyperliquid-btc-dashboard/actions/runs/44951382679). This supersedes earlier "only first scheduled run" snapshots.
+- **Cadence warning:** adjacent successful *run start* timestamps are approximately 41–63 minutes apart, despite configured cron `2,17,32,47 * * * *` (four times/hour). These are Actions run creation intervals, **not verified candle coverage**. The repository must not claim a 15-minute continuous feed or infer exactly why GitHub omitted/delayed triggers.
+- The daily paper audit has one verified successful **push** smoke [#44898036259](https://github.com/Elikers/hyperliquid-btc-dashboard/actions/runs/44898036259); no `event=schedule` daily audit is present in the latest 100-run results at this check. Its 23:28 UTC start was still in the future at the time of this check.
+- **Next:** instrument scheduled-run and closed-candle coverage independently, distinguish missed triggers from delayed runs and explicitly quarantine paper outcomes across uncovered future candles. Continue historical/source parity research while collecting fresh forward evidence.
+
 ## Specific unresolved evidence
 1. **Scheduled recurrence:** First real `event=schedule` capture **succeeded** in [run #44897289838](https://github.com/Elikers/hyperliquid-btc-dashboard/actions/runs/44897289838), 2026-11-21 11:03 UTC. Multiple-hour coverage and missed-trigger rate remain unverified.
 2. **Bar-by-bar parity:** Need independent original-Pine closed-bar factors, zero-signal periods, LONG/SHORT entry times and exits across all three timeframes; unit tests and model-vs-model comparisons are insufficient.
