@@ -11,13 +11,14 @@ from research.parity_checks import TF_MS
 
 CAPTURE_MS = 1_700_006_400_000  # rounded to hour, actual timezone date not important
 CAPTURE_MS -= CAPTURE_MS % 3_600_000
+CAPTURE_MS += 5_000  # production samples after the 3-second closed-bar safety gate
 
 
 def fixtures():
     snapshot = {}
     for tf, step in TF_MS.items():
         # At least 110 valid previous bars including a closed most-recent bar.
-        end = CAPTURE_MS - 1
+        end = CAPTURE_MS - 5_000 - 1
         bars = [
             {"t": end - (109-i)*step - step + 1,
              "T": end - (109-i)*step,
