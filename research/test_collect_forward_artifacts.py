@@ -113,6 +113,8 @@ class CollectTests(unittest.TestCase):
             self.assertEqual(request.get_header("Authorization"),"Bearer fake-token")
             if "/actions/artifacts/41/zip" in url:
                 return Response(zipped(record))
+            if "/workflows/btc-forward-capture.yml/runs" in url:
+                return Response(json.dumps({"workflow_runs":[]}).encode())
             if "page=1" in url:
                 return Response(json.dumps({"artifacts":docs}).encode())
             return Response(json.dumps({"artifacts":[]}).encode())
@@ -121,6 +123,8 @@ class CollectTests(unittest.TestCase):
         self.assertEqual(output["collection"]["artifactCount"],1)
         self.assertEqual(output["byTimeframe"]["15m"]["uniqueClosedBars"],1)
         self.assertFalse(output["profitabilityClaimAllowed"])
+        self.assertIn("githubScheduleReliability", output)
+        self.assertEqual(output["githubScheduleReliability"]["observedScheduledRunCount"],0)
         self.assertFalse(output["discordEligible"])
         self.assertIn("closedCandleCoverage",output)
         self.assertGreater(output["closedCandleCoverage"]["byTimeframe"]["15m"]["unobservedClosedBars"],0)
@@ -128,6 +132,8 @@ class CollectTests(unittest.TestCase):
 
     def test_missing_artifacts_not_profitable(self):
         def empty(request,timeout=30):
+            if "/workflows/btc-forward-capture.yml/runs" in request.full_url:
+                return Response(json.dumps({"workflow_runs":[]}).encode())
             return Response(json.dumps({"artifacts":[]}).encode())
         output=collect_daily("Elikers/hyperliquid-btc-dashboard","t",
                              now=NOW,opener=empty)
@@ -137,6 +143,8 @@ class CollectTests(unittest.TestCase):
 
     def test_reject_corrupted_record_end_to_end(self):
         def broken(request,timeout=30):
+            if "/workflows/btc-forward-capture.yml/runs" in request.full_url:
+                return Response(json.dumps({"workflow_runs":[]}).encode())
             if "/zip" in request.full_url:
                 record=observation()
                 record["automaticTrading"]=True
@@ -162,10 +170,12 @@ class CollectTests(unittest.TestCase):
         pages=[]
         def opener(request,timeout=30):
             pages.append(request.full_url)
+            if "/workflows/btc-forward-capture.yml/runs" in request.full_url:
+                return Response(json.dumps({"workflow_runs":[]}).encode())
             return Response(json.dumps({"artifacts":old}).encode())
         data=collect_daily("Elikers/hyperliquid-btc-dashboard","t",
                            now=NOW,opener=opener)
-        self.assertEqual(len(pages),1)
+        self.assertEqual(len(pages),2)  # artifact page plus scheduled-run page
         self.assertEqual(data["collection"]["artifactCount"],0)
 
     def test_explicit_limit(self):
