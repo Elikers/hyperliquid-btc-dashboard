@@ -50,3 +50,9 @@ The [15-minute BTC snapshot workflow](.github/workflows/btc-forward-capture.yml)
 ### Capture schedule
 
 BTC-only research snapshots are scheduled four times per hour, at **:02, :17, :32, and :47 UTC** (shortly after each 15-minute candle boundary). Artifacts are retained for **2 days**. GitHub Actions schedules are best-effort, can start late or be skipped, and are **not** a 24/7 live signal service. ChatGPT's separate code/QA automation stays hourly. No Discord trading alerts are enabled.
+
+## Preferred validation route: source-supported Viprasol Macro OFF
+
+The user's original Viprasol Pine v6 contains its own optional `macroFactorOnInput` switch. When OFF, it scores **7** original technical factors instead of 8 and no longer needs `CME_MINI:NQ1!`. We have implemented a separate [Classic Macro-Off research evaluator](research/classic_macro_off.py) with [completed-day ADR14](research/adr_gate.py), plus unit tests, while retaining the unverified eight-factor Classic and separate experimental BTC-only Lab.
+
+The 15-minute scheduled read-only research artifact includes `viprasolClassicMacroOff`, `btcOnlyLab`, and blocked eight-factor diagnostics. **None are certified signals or Discord alerts.** VWAP time anchoring, 15-minute confirmation merging, indicator warmups, Pine parity and fee-adjusted performance still require independent evidence. This choice avoids forcing a paid Nasdaq subscription as a prerequisite for research.
