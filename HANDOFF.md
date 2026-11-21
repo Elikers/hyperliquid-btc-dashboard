@@ -28,8 +28,16 @@
 - Ledger deduplicates each closed timeframe bar, checks immutable digest and candidate provenance, quarantines missing bars, computes research-only hypothetical outcomes after entry candle, and never enables Discord or trading.
 - **Not yet integrated into autonomous artifact fetching or periodic reporting.** No claim of real trading profitability; scheduled `event=schedule` run remains unverified.
 
+## Verified capture and current daily-audit failure — 2026-11-21
+
+- First successful real scheduled capture: [Actions #44897289838](https://github.com/Elikers/hyperliquid-btc-dashboard/actions/runs/44897289838), `event=schedule`, success; no multi-hour uptime proof.
+- Read-only daily artifact audit added in [PR #3](https://github.com/Elikers/hyperliquid-btc-dashboard/pull/3) and merged at `602fd6e455e0889ec6255cf663f903a3d548dad0`. [Offline CI #44897696487](https://github.com/Elikers/hyperliquid-btc-dashboard/actions/runs/44897696487) passed.
+- First real daily smoke [Actions #44897739711](https://github.com/Elikers/hyperliquid-btc-dashboard/actions/runs/44897739711) **failed** after 186 passing offline tests: GitHub artifact ZIP download redirected to external signed blob URL and returned HTTP 401 when bearer token was forwarded.
+- [PR #4](https://github.com/Elikers/hyperliquid-btc-dashboard/pull/4) contains an HTTPS allowlisted, credential-stripping redirect fix and regression tests. Its actual CI and end-to-end result must be checked before considering the daily workflow operational.
+- No change to the dashboard, Classic strategy settings, Discord trade alerts or wallet trading.
+
 ## Next unfinished task
-**Verify a genuine `event=schedule` 15-minute research capture.** If none exists, diagnose schedule and permissions without claiming uptime. **Next engineering integration:** connect the already implemented offline paper ledger to read-only discovery/download of retained compact GitHub Actions artifacts, produce coverage and outcomes only on available future observations, flag gaps, and validate through GitHub CI. Continue independent Pine parity work. Continue full source parity checks independently. See priorities in `PROJECT_STATE.md`.
+**Complete GitHub PR #4 by checking CI and a successful post-merge read-only daily audit artifact smoke test.** Then monitor consecutive scheduled capture runs (one success exists) and evaluate multi-capture paper outcomes without inventing trades or continuity. Continue independent Pine parity work. Continue full source parity checks independently. See priorities in `PROJECT_STATE.md`.
 
 ## Prompt for any new chat
 > Partner, continue our Hyperliquid BTC development in `Elikers/hyperliquid-btc-dashboard`. Read `PROJECT_STATE.md`, `DECISIONS.md`, `HANDOFF.md`, and the current GitHub Actions runs before working. Continue from the next unfinished verified task without repeating previous questions. Preserve Viprasol Classic unchanged, the working dashboard, no live Discord trade signals, no wallet trading, and no unverified profit claims. Commit safe fixes and update the handoff only after confirming evidence.
