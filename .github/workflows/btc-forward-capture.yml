@@ -33,6 +33,15 @@ jobs:
         run: python -m research.evaluate_public_snapshot
       - name: Build compact paper evidence
         run: python -m research.forward_observation
+      - name: Archive already-fetched historical candles (never forward signals)
+        run: python -m research.historical_candle_archive
+      - name: Upload historical-only candle recovery archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: btc-historical-candles-${{ github.run_id }}
+          path: capture-output/historical_candles_only.json
+          retention-days: 30
+          if-no-files-found: error
       - name: Upload compact 30-day forward observations
         uses: actions/upload-artifact@v4
         with:
