@@ -33,3 +33,12 @@ This is a **public repository**. Never commit Discord webhook URLs, wallet crede
 ## Attribution
 
 Charts use [TradingView Lightweight Charts™](https://www.tradingview.com/lightweight-charts/) (open-source chart library). Market data is provided by public Hyperliquid APIs. The original Viprasol Pine Script belongs to its creator and is not represented here as an exact implementation.
+
+## Research verification update (November 21, 2026)
+
+- Added [Viprasol source audit and parity requirements](research/README.md).
+- Added [strict candle/macro provenance and event comparison code](research/parity_checks.py).
+- Added [automated offline research safety checks](.github/workflows/research-checks.yml).
+
+**This does not enable automatic Discord trade alerts.** Nasdaq `CME_MINI:NQ1!` data provenance and full original Pine parity are still unverified, so all Classic research results remain non-actionable. The public Pages chart continues operating independently of the research checks.
+
