@@ -6,6 +6,9 @@ on:
     paths:
       - '.github/workflows/btc-backtest-forward.yml'
       - 'research/backtest_real_btc_snapshot.py'
+      - 'research/instant_paper_comparison.py'
+      - 'research/test_instant_paper_comparison.py'
+      - 'research/regime_sweep_research.py'
 permissions:
   contents: read
   actions: read
@@ -34,6 +37,13 @@ jobs:
           python -m research.backtest_real_btc_snapshot \
             --repo "${{ github.repository }}" \
             --out test-output/historical_backtest.json
+      - name: Simulate fixed BTC Lab paper filter on saved real historical market candles
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          python -m research.instant_paper_comparison \\
+            --repo "${{ github.repository }}" \\
+            --out test-output/instant_paper_comparison.json
       - name: Audit actual forward evidence separately
         env:
           GITHUB_TOKEN: ${{ github.token }}
