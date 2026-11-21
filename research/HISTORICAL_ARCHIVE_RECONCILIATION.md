@@ -15,3 +15,7 @@ The separate `.github/workflows/btc-historical-audit.yml` workflow requests `act
 **Important:** Its 72-hour window filters **artifact creation times**, not the exact full historical span of the recovered candles. The result describes the union between the oldest and newest available recorded historical bar, not a validated forward capture record. It is allowed to report no archives or a partial collection; `artifactLimitReached` and `exhaustiveWithinWindow` surface this limitation explicitly. It never supplies data to the forward paper ledger or alters its 15-minute observation-coverage fractions. This scheduled report, like all GitHub schedules, is best-effort and cannot ensure an exact daily execution time.
 
 Run: `python -m research.collect_historical_artifacts --hours 72` with a short-lived GitHub Actions read-only `GITHUB_TOKEN`, or inspect its uploaded report. Do not place tokens in source files.
+
+## Updated bounded audit intake during cron pilot
+
+The research-only audit now filters artifacts created over the latest **24 hours** and limits to **250** historical sources (previously 72h/120), to bound work under the redundant capture pilot. Each source includes up to 24h of trailing candles, so its covered market window can begin before that artifact-creation cutoff. Do not call this a 72-hour report or a forward observation feed.
