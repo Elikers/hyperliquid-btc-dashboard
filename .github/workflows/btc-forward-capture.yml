@@ -1,0 +1,30 @@
+name: Capture BTC research candles
+on:
+  schedule:
+    - cron: '17 * * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: btc-public-research-capture
+  cancel-in-progress: false
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Collect closed public candles
+        run: python -m research.capture_public_btc
+      - name: Upload research-only snapshots
+        uses: actions/upload-artifact@v4
+        with:
+          name: btc-research-candles-${{ github.run_id }}
+          path: capture-output/
+          retention-days: 7
+          if-no-files-found: error
