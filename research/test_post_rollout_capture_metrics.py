@@ -40,10 +40,10 @@ class PostRolloutTests(unittest.TestCase):
 
     def test_successful_schedule_counts_distinct_bar_only(self):
         result=assess_pilot([
-            {"runId":2,"record":observation(8)},
-            {"runId":3,"record":observation(12)},
-            {"runId":4,"record":observation(8)}
-        ],[run(2,7),run(3,11),run(4,7,event="workflow_dispatch")],
+            {"runId":2,"record":observation(23)},
+            {"runId":3,"record":observation(27)},
+            {"runId":4,"record":observation(23)}
+        ],[run(2,22),run(3,26),run(4,22,event="workflow_dispatch")],
           through=PILOT_START_UTC+timedelta(minutes=40))
         self.assertEqual(result["scheduledSuccessfulRunCount"],2)
         self.assertEqual(result["scheduledRunsWithVerifiableForwardArtifacts"],2)
