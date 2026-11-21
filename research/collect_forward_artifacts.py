@@ -11,7 +11,8 @@ import os
 from pathlib import Path
 import re
 from urllib.error import HTTPError
-from urllib.request import Request, urlopen
+from urllib.request import Request, urlopen, build_opener, HTTPRedirectHandler
+from urllib.parse import urlsplit
 import zipfile
 
 from research.forward_paper_ledger import analyze_forward_records
@@ -23,7 +24,36 @@ REPO_PATTERN=re.compile(r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$")
 ARTIFACT_PATTERN=re.compile(r"^btc-paper-evidence-([0-9]+)$")
 
 
-def _read(url,token,*,opener=urlopen,limit=MAX_ARCHIVE_BYTES):
+class _SafeArtifactRedirect(HTTPRedirectHandler):
+    """GitHub signs cross-host artifact redirects; never forward API tokens."""
+    def redirect_request(self,request,response,code,message,headers,newurl):
+        next_request=super().redirect_request(
+            request,response,code,message,headers,newurl)
+        if next_request is None:
+            return None
+        target=urlsplit(newurl)
+        if target.scheme!="https":
+            raise ValueError("Non-HTTPS artifact redirect rejected")
+        if target.hostname!=urlsplit(request.full_url).hostname:
+            name=target.hostname or ""
+            # GitHub Actions archive downloads use short-lived signed blobs,
+            # not the GitHub REST host. A GitHub token on that redirected URL
+            # causes 401 and needlessly exposes credentials to blob storage.
+            allowed=(name.endswith(".blob.core.windows.net")
+                     or name.endswith(".actions.githubusercontent.com")
+                     or name.endswith(".githubusercontent.com"))
+            if not allowed:
+                raise ValueError("Unexpected external artifact storage host")
+            return Request(newurl,headers={
+                "User-Agent":"btc-research-paper-ledger/1.0"})
+        return next_request
+
+
+def _github_open(request,timeout=30):
+    return build_opener(_SafeArtifactRedirect()).open(request,timeout=timeout)
+
+
+def _read(url,token,*,opener=_github_open,limit=MAX_ARCHIVE_BYTES):
     if not token or not url.startswith("https://api.github.com/repos/"):
         raise ValueError("Only authenticated GitHub API access allowed")
     request=Request(url,headers={"Authorization":f"Bearer {token}",
@@ -86,7 +116,7 @@ def decode_paper_archive(data):
 
 
 def collect_daily(repo,token,*,now=None,lookback_hours=24,
-                  max_artifacts=110,opener=urlopen):
+                  max_artifacts=110,opener=_github_open):
     if not REPO_PATTERN.fullmatch(repo):
         raise ValueError("Invalid GitHub repository path")
     if not 1<=lookback_hours<=720:
