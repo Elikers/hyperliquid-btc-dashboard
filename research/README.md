@@ -94,3 +94,9 @@ The scheduled research artifact now contains three explicitly distinguished outp
 - `btcOnlyLab`: separately experimental BTC-only model with ADR disabled.
 
 **Path to operational signals:** Validate VWAP session anchoring, 15m confirmation merge, EMA/RSI/MACD/ADX and ATR against the source and independent reference events; test net results after fees/slippage; only then consider enabling notification delivery. Even Macro-Off Classic is not yet parity-verified or proven profitable. The original Macro-On eight-factor version stays intact and blocked pending actual NQ1! data.
+
+## Historical evidence: candidate replay, not validated performance
+
+A [35-candidate conservative OHLC replay](HISTORICAL_CANDIDATE_REPLAY_2026-11-21.md), using the prior locally available BTC research CSVs, yielded **20 SL, 9 BE, and 6 TP3**, for **-2.0 summed gross R**. Under a purely illustrative 7 bps one-way execution-drag assumption the sum becomes **-8.789 R**. Since positions overlap and costs are assumptions, these sums **are not account returns or verified Viprasol performance**. The replay logic and synthetic safety tests are in [`replay_reference_candidates.py`](replay_reference_candidates.py) and [`test_replay_reference_candidates.py`](test_replay_reference_candidates.py); source CSVs are not included in this public repository.
+
+The scheduled GitHub BTC capture now **runs the full offline research test suite before sampling**, so a failed regression check prevents publication of fresh research artifacts. This protects against broken code but does not prove the GitHub scheduler itself has run successfully; accessible GitHub Actions push/cron job results still need verification.
