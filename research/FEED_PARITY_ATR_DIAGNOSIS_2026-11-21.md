@@ -30,6 +30,10 @@ Recomputed using the **1,187 provided 15m candles up to and including that close
 
 The displayed stop's nearest-tenth rounding uncertainty is only about 0.05 USDC, so the gap is larger than display rounding alone can explain. The discrepancy may reflect different source OHLC bars, indicator history, applied chart settings, or candle/series alignment. **Do not claim which cause is responsible without independently comparing the underlying historical bars and Pine ATR values.** The Pine source's stop formula itself is `ta.atr(14) * 1.5`, which is faithfully represented by the research ladder formula.
 
+## Important limitation of the older historical dataset
+
+The local history exported **1,204 bars per timeframe**, but that means different time spans: **15m = 12.54 days** (November 8–20 UTC), **30m = 25.08 days** (October 26–November 20 UTC), and **1h = 50.17 days** (October 1–November 20 UTC). The 15-minute history **cannot independently reproduce the original 14 fully completed daily ranges** used by the source's ADR gate. Therefore, the older 35-candidate analysis is **not** a validated complete Viprasol Classic Macro-Off backtest, regardless of its recorded outcomes. The scheduled snapshot collector now requests approximately **27 days of candles for every timeframe** specifically to resolve that historical-coverage problem.
+
 ## Unverified work remaining
 
 1. Compare original Viprasol's 15m, 30m, and 1h factors and signals **bar by bar** against independent source outputs, including exact VWAP and lower-timeframe `request.security` behavior.
