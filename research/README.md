@@ -75,3 +75,9 @@ Original Pine calculates the NQ1! EMA inside `request.security` on the futures i
 2. Replay proof that Pine `request.security` session/time-merge and `ta.vwap` match our implementation;
 3. Exact bar-by-bar factors, both missed and extra LONG/SHORT signals, and ATR/TP levels on independent datasets;
 4. Forward evidence after costs and feed outages. **No live trading or Discord trade-alert activation.**
+
+## Parallel BTC-only Lab research — not a substitute for Classic
+
+A separately labeled [BTC-only 7-factor Lab](btc_only_lab.py) now computes hypothetical research candidates without NQ1!. It does **not** inherit Classic's eight-factor parity claim; the ADR gate is deliberately disabled and disclosed in Lab until daily-input parity is verified. [Regression tests](test_btc_only_lab.py) assert that it never produces trade alerts.
+
+The 15-minute scheduled [research evaluator](evaluate_public_snapshot.py) writes both blocked Classic observations and `btcOnlyLab` hypothetical observations into the same GitHub Actions JSON artifact. Results are forward samples for **research**, not validated entry recommendations. Fees, execution slippage and risk-adjusted profitability remain unproven. All wallet actions and webhook sending are absent.
