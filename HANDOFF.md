@@ -123,3 +123,10 @@ Keep updates concise and actionable. The user prefers autonomous sequential acti
 
 ## When this file needs revision
 Update the current next-step blocker, most recent confirmed run links/commits, relevant artifacts and any user-approved scope changes. Do not duplicate full source documents, expose credentials or embed private data.
+
+
+## Isolated lab diagnostics added — 2026-11-22 (CI still unverified)
+- Added research-only `research/regime_sweep_research.py` and `research/test_regime_sweep_research.py`, latest commit [`3a7a88d`](https://github.com/Elikers/hyperliquid-btc-dashboard/commit/3a7a88db9f6d46717b5d965dbea2993c343a70cd). Generic CHOP(14) and preceding-20-bar rejected-high/low sweep diagnostics, **not** a cloned third-party TradingView strategy or a trading decision.
+- Seven isolated tests ran locally and passed. Latest main GitHub Actions CI **has not been retrieved/verified** for these commits. The module is not wired into the historical backtest, forward evaluator, browser dashboard, Discord or trading.
+- Research note: Classic already includes ADX>25 as one of seven factors, so do not blindly append duplicate ADX. External TradingView scripts suggest CHOP and liquidity-sweep concepts but no independently demonstrated Hyperliquid BTC profitability.
+- Next: verify current main CI; only then run a controlled, cost-aware same-sample comparison of research-only diagnostics versus unchanged Classic with untouched forward evidence. Do not claim candidate superiority, original Pine parity, or profitability without that evidence.
