@@ -29,6 +29,14 @@ Develop a dependable, independently verified **Hyperliquid BTCUSDC perpetual** r
 - 15m, 30m and 1h all rely on genuinely closed Hyperliquid BTC public candles and bar-aligned 15m confirmation. ATR and indicator warmup, VWAP anchoring, `request.security` merge and source-series comparison still need independent evidence.
 - Data safeguards: common capture timestamp; reject missing/stale/misaligned OHLCV and inconsistent timeframe aggregation; generated outputs are `researchOnly`, `discordEligible=false`.
 
+## Verified update — 2026-11-21, paper ledger foundation
+
+- **New research-only offline forward paper ledger merged to `main`**, commit [`cdf2b0c5`](https://github.com/Elikers/hyperliquid-btc-dashboard/commit/cdf2b0c5be46a7e0d39843498e3414e4310f4021) via [PR #2](https://github.com/Elikers/hyperliquid-btc-dashboard/pull/2).
+- [Pull-request CI #44897218955](https://github.com/Elikers/hyperliquid-btc-dashboard/actions/runs/44897218955) **passed**, followed by [main-branch CI #44897257025](https://github.com/Elikers/hyperliquid-btc-dashboard/actions/runs/44897257025) **passed**.
+- New [`research/forward_paper_ledger.py`](research/forward_paper_ledger.py) and **11 regression tests** implement SHA-256 evidence integrity checking, de-duplication by timeframe and closed-candle timestamp, rejection of inconsistent duplicate records, fail-closed missing-bar audit, and hypothetical SL/BE/TP3 outcomes after the entry bar. All results remain research-only, with illustrative execution costs and explicit unverified profitability/Pine-parity flags.
+- **This is the offline analysis engine, not yet unattended artifact ingestion or historical profitable results.** [Usage and limits](research/FORWARD_PAPER_LEDGER.md).
+- As of this check, only a previously verified **push-triggered** BTC capture ([#44895884495](https://github.com/Elikers/hyperliquid-btc-dashboard/actions/runs/44895884495)) was present. Successful recurring scheduled runs have **not** been confirmed.
+
 ## Specific unresolved evidence
 1. **Scheduled recurrence:** GitHub Actions `event=schedule` success and coverage across multiple hours have not been independently established. The verified smoke run was `event=push`.
 2. **Bar-by-bar parity:** Need independent original-Pine closed-bar factors, zero-signal periods, LONG/SHORT entry times and exits across all three timeframes; unit tests and model-vs-model comparisons are insufficient.
@@ -38,7 +46,7 @@ Develop a dependable, independently verified **Hyperliquid BTCUSDC perpetual** r
 6. **Live service:** No always-on monitoring server; GitHub Pages is browser-only and scheduled Actions are not 24/7 real-time alert delivery.
 
 ## Priorities (execute sequentially; no routine user approvals)
-P0 Verify schedule execution and failed jobs using live GitHub API; record exact run links and conclusions. P1 Implement reliable deduplicated paper setup/outcome tracking from forward artifacts; keep alerts off. P2 Pursue independent Pine parity and ATR discrepancies without changing original thresholds. P3 Evaluate out-of-sample net expectancy, drawdown and execution assumptions. P4 Consider secure continuous hosting and Discord only after an explicit readiness and risk review.
+P0 Verify schedule execution and failed jobs using live GitHub API; record exact run links and conclusions. P1 **Offline ledger implemented and CI verified**. Next connect read-only artifact discovery/replay and check missing bars without enabling alerts. P2 Pursue independent Pine parity and ATR discrepancies without changing original thresholds. P3 Evaluate out-of-sample net expectancy, drawdown and execution assumptions. P4 Consider secure continuous hosting and Discord only after an explicit readiness and risk review.
 
 ## Operational rules
 - Read [DECISIONS.md](DECISIONS.md) before modifying strategy or infrastructure.
