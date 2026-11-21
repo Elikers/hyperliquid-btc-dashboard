@@ -27,6 +27,15 @@ jobs:
         run: python -m research.capture_public_btc
       - name: Evaluate seven-factor research only
         run: python -m research.evaluate_public_snapshot
+      - name: Build compact paper evidence
+        run: python -m research.forward_observation
+      - name: Upload compact 30-day forward observations
+        uses: actions/upload-artifact@v4
+        with:
+          name: btc-paper-evidence-${{ github.run_id }}
+          path: capture-output/forward_observation.json
+          retention-days: 30
+          if-no-files-found: error
       - name: Upload research-only snapshots
         uses: actions/upload-artifact@v4
         with:
