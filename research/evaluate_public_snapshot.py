@@ -25,6 +25,11 @@ def score_snapshots(folder="capture-output"):
         if d.get("discordEligible") is not False:
             raise ValueError("Research-data safety flag missing")
         loaded[timeframe]=d
+    # All three snapshots must be from one coherent observation instant,
+    # never a mixture of stale/new capture runs near a candle boundary.
+    capture_times={loaded[tf].get("capturedAtUtc") for tf in TF_MS}
+    if len(capture_times)!=1 or None in capture_times:
+        raise RuntimeError("Mixed observation timestamps across BTC snapshots")
     # Before evaluating any confluence, prove that overlapping 30m/1h bars
     # agree with the independently returned 15m exchange candle feed.
     integrity=audit_cross_timeframe({
