@@ -35,3 +35,9 @@ The standard-library `parity_checks.py` rejects missing/gapped/invalid candle in
 2. Verify exact Pine-equivalent BTC candles, TA calculations and 15m/30m/1h `request.security` bar merges.
 3. Import independent, dated reference signals and compare both false negatives and false positives, then SL/TP levels.
 4. Build a separately hosted *read-only research monitor* first. A live alert worker would be a separately reviewed decision; it remains off here.
+
+## Classic decision gate (new)
+
+[`classic_decision.py`](classic_decision.py) implements the **closed-bar EMA9/21 crossover decision**, seven technical-factor booleans plus optional eighth macro boolean, the 5/8 score gate, America/New_York EU/US session hours, weekend block and ADR exhaustion. It returns the reason when a prospective entry is blocked. Tests cover false entries on existing trends, wrong sessions, weekend, invalid macro provenance, and ADR.
+
+**Scope:** It evaluates *already computed* factors, not Pine-equivalent factor calculations or an authenticated macro data feed. `discordEligible` is always `false`. The website and Discord settings are unchanged.
