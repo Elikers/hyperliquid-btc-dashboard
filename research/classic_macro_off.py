@@ -17,6 +17,11 @@ def evaluate_classic_macro_off(btc_candles, confirm_15m_candles, *,
         raise ValueError("Unsupported timeframe")
     if not isinstance(current_ms,int) or current_ms<=0:
         raise ValueError("Invalid current time")
+    if not isinstance(min_score,int) or not 1 <= min_score <= 8:
+        raise ValueError("Original Viprasol minimum score must be 1..8")
+    # Pine: minScoreEff = math.min(minScoreInput, factorTotal), with
+    # factorTotal=7 when the macro factor is switched off.
+    effective_min_score = min(min_score, 7)
     closed=clean([b for b in btc_candles if int(b["T"]) < current_ms],
                  STEPS[timeframe])
     confirm=[b for b in confirm_15m_candles if int(b["T"]) < current_ms]
@@ -32,7 +37,7 @@ def evaluate_classic_macro_off(btc_candles, confirm_15m_candles, *,
         context=Context(
             timeframe=timeframe,candle_closed=True,symbol_verified=True,
             macro_provenance_verified=False,macro_factor_enabled=False,
-            min_score=min_score,bar_open_ms=closed[-1]["t"],
+            min_score=effective_min_score,bar_open_ms=closed[-1]["t"],
             adr_filter_enabled=True,adr_percent_used=adr["usedPercent"]))
     reasons=list(decision["reasons"])
     # The Pine source ignores unavailable ADR, but for a *claim of proven*
@@ -50,7 +55,8 @@ def evaluate_classic_macro_off(btc_candles, confirm_15m_candles, *,
         "configuration":"VIPRASOL_CLASSIC_MACRO_OFF",
         "sourceSupportedSetting":"macroFactorOnInput = false",
         "timeframe":timeframe,"closedThroughMs":closed[-1]["T"],
-        "scoreDenominator":7,"scoreThreshold":min_score,
+        "scoreDenominator":7,"scoreThreshold":effective_min_score,
+        "originalInputMinScore":min_score,
         "bullScore":factors["bullScoreSeven"],
         "bearScore":factors["bearScoreSeven"],
         "adr":adr,"rawCrossover":decision["rawCrossover"],
