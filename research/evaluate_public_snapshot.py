@@ -11,6 +11,7 @@ from research.parity_checks import TF_MS
 from research.pipeline import calculate_research_candidate
 from research.btc_only_lab import evaluate_btc_only_lab
 from research.classic_macro_off import evaluate_classic_macro_off
+from research.cross_timeframe_audit import audit_cross_timeframe
 
 
 def score_snapshots(folder="capture-output"):
@@ -24,6 +25,13 @@ def score_snapshots(folder="capture-output"):
         if d.get("discordEligible") is not False:
             raise ValueError("Research-data safety flag missing")
         loaded[timeframe]=d
+    # Before evaluating any confluence, prove that overlapping 30m/1h bars
+    # agree with the independently returned 15m exchange candle feed.
+    integrity=audit_cross_timeframe({
+        tf:loaded[tf]["closedCandles"] for tf in ("15m","30m","1h")
+    })
+    if not integrity["passed"]:
+        raise RuntimeError("Cross-timeframe BTC candle disagreement: "+str(integrity["timeframes"]))
     evidence={}
     lab_evidence={}
     macro_off_evidence={}
@@ -55,7 +63,8 @@ def score_snapshots(folder="capture-output"):
         macro_off_evidence[timeframe]=macro_off
     return {"kind":"public_btc_seven_factor_forward_research",
             "capturedAtUtc":loaded["15m"]["capturedAtUtc"],
-            "timeframes":evidence,"btcOnlyLab":lab_evidence,
+            "timeframes":evidence,"candleIntegrity":integrity,
+            "btcOnlyLab":lab_evidence,
             "viprasolClassicMacroOff":macro_off_evidence,
             "originalViprasolVerified":False,
             "discordEligible":False,"liveSignalAlerts":False,
