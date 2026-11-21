@@ -68,6 +68,19 @@ class PostRolloutTests(unittest.TestCase):
         self.assertFalse(r["profitabilityClaimAllowed"])
         self.assertFalse(r["discordEligible"])
 
+    def test_after_first_day_uses_only_latest_24h(self):
+        r=assess_pilot(
+            [{"runId":1,"record":observation(23)},
+             {"runId":2,"record":observation(26*60+23)}],
+            [run(1,22),run(2,26*60+22)],
+            through=PILOT_START_UTC+timedelta(hours=27))
+        self.assertTrue(r["fullPostRolloutWindowAvailable"])
+        self.assertEqual(r["scheduledSuccessfulRunCount"],1)
+        self.assertEqual(r["scheduledRunsWithVerifiableForwardArtifacts"],1)
+        self.assertEqual(r["closedBarCoverageFromScheduledRunsOnly"]["byTimeframe"]["15m"]["expectedClosedBars"],96)
+        self.assertEqual(r["closedBarCoverageFromScheduledRunsOnly"]["byTimeframe"]["15m"]["observedUniqueClosedBars"],1)
+        self.assertTrue(r["rolling24hWindowAfterFirstDay"])
+
     def test_before_baseline_fails_closed(self):
         r=assess_pilot([],[],through=PILOT_START_UTC)
         self.assertEqual(r["outcome"],"NOT_ENOUGH_ELAPSED_TIME")
