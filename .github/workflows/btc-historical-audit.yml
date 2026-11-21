@@ -35,8 +35,8 @@ jobs:
         run: |
           python -m research.collect_historical_artifacts \
             --repo "${{ github.repository }}" \
-            --hours 72 \
-            --max-artifacts 120 \
+            --hours 24 \
+            --max-artifacts 250 \
             --out history-output/historical_audit.json
       - name: Upload historical-only audit
         uses: actions/upload-artifact@v4
