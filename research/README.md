@@ -47,3 +47,16 @@ The standard-library `parity_checks.py` rejects missing/gapped/invalid candle in
 [`factors.py`](factors.py) now calculates research-side EMA9/21, RSI14, MACD12/26/9, DMI/ADX14, 20-bar volume mean, intraday UTC-day VWAP approximation, and last-confirmed 15m RSI for 15m/30m/1h. It returns the seven bullish and bearish factor booleans and scores plus crossover inputs for the existing [Classic decision gate](classic_decision.py). The [unit tests](test_factors.py) cover indicator initialization, future/stale confirmation rejection, invalid candles, and explicit disabled-Discord status.
 
 **Not yet done:** validate against TradingView exact OHLC/volume, VWAP session anchoring, multi-timeframe bar merge; acquire exact `CME_MINI:NQ1!` macro candles; verify factor-by-factor and entry/SL/TP parity. The new module intentionally is **not a live signal engine or automatic alert connector**.
+
+## Eight-factor research audit and risk ladder
+
+- [`macro_factor.py`](macro_factor.py): rolling 20-bar Pearson BTC/NQ correlation, Nasdaq EMA direction, positive/inverse link and +/−0.3 threshold; insufficient or unverified macro feeds cannot count as confirmed votes.
+- [`risk_ladder.py`](risk_ladder.py): Pine-style ATR14 × 1.5 stop and 1R/2R/3R targets; future OHLC stop-before-target outcome audit and TP1 breakeven.
+- [`eight_factor_audit.py`](eight_factor_audit.py): combines seven calculations, eighth factor, original crossover/session/ADR gates and risk levels on already closed BTC/NQ bars, rejecting missing/misaligned NQ candles.
+- [`test_macro_factor.py`](test_macro_factor.py), [`test_risk_ladder.py`](test_risk_ladder.py), [`test_eight_factor_audit.py`](test_eight_factor_audit.py): local/no-network unit tests, automatically picked up by the existing GitHub research safety workflow.
+- [`capture_public_btc.py`](capture_public_btc.py): offline-testable official Hyperliquid public candle snapshot retrieval.
+- [`BTC forward capture`](../.github/workflows/btc-forward-capture.yml): scheduled hourly snapshot attempt, with seven-day GitHub Actions artifacts. This workflow does **not** provide 24/7 streaming data, exact NQ1! input, TradingView parity, Discord alerts or trading.
+
+### Why alerts are still OFF
+
+Original Pine calculates the NQ1! EMA inside `request.security` on the futures instrument before merging it onto BTC candles. A clean, aligned set of arbitrary BTC/NQ candles is *not* necessarily the same as TradingView's macro series, and a verified license alone does not prove equivalent roll sessions. VWAP session anchoring and 15m `request.security` merging also require exchange-matched parity checks. All audit functions hardcode `discordEligible=False` and `originalViprasolVerified=False`, regardless of test scores.
