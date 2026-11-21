@@ -18,6 +18,7 @@ import zipfile
 from research.forward_paper_ledger import analyze_forward_records
 from research.observation_coverage import observation_coverage
 from research.schedule_reliability import schedule_reliability
+from research.post_rollout_capture_metrics import assess_pilot
 
 PREFIX="btc-paper-evidence-"
 MAX_ARCHIVE_BYTES=2_000_000
@@ -148,12 +149,15 @@ def collect_daily(repo,token,*,now=None,lookback_hours=24,
             break
     chosen=select_artifacts(items,after=after,limit=max_artifacts)
     records=[]
+    records_with_runs=[]
     for item in chosen:
         # Construct archive URL ourselves rather than following an
         # arbitrary untrusted URL from artifact metadata.
         url=f"https://api.github.com/repos/{repo}/actions/artifacts/{item['id']}/zip"
         data=_read(url,token,opener=opener)
-        records.append(decode_paper_archive(data))
+        record=decode_paper_archive(data)
+        records.append(record)
+        records_with_runs.append({"runId":item["runId"],"record":record})
     # Audit GitHub scheduled executions separately from exchange candle
     # coverage. Only actual run records count, never synthetic cron events.
     scheduled_runs=[]
@@ -178,6 +182,8 @@ def collect_daily(repo,token,*,now=None,lookback_hours=24,
         records,after=after,through=now)
     results["githubScheduleReliability"]=schedule_reliability(
         scheduled_runs,after=after,through=now)
+    results["postRolloutPilot"]=assess_pilot(
+        records_with_runs,scheduled_runs,through=now)
     for tf,entry in results["byTimeframe"].items():
         entry["performanceSufficient"]=False
     results["collection"]={"repository":repo,"lookbackHours":lookback_hours,
@@ -220,6 +226,12 @@ def main():
     print("GitHub scheduled capture runs:",health["observedScheduledRunCount"],
           "/",health["configuredCronOpportunities"],
           "configured opportunities (NOT exact missed-slot count)")
+    pilot=result["postRolloutPilot"]
+    print("Post-rollout pilot status:",pilot["outcome"],
+          "elapsed minutes:",pilot["elapsedMinutes"])
+    if "scheduledSuccessfulRunCount" in pilot:
+        print("Successful scheduled runs:",pilot["scheduledSuccessfulRunCount"],
+              "with verified compact evidence:",pilot["scheduledRunsWithVerifiableForwardArtifacts"])
     print("Profitability and Pine parity NOT verified; Discord and trading OFF")
 
 
