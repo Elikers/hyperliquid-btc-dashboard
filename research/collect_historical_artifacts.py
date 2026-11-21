@@ -66,8 +66,8 @@ def decode_history_zip(data):
         return result
 
 
-def collect_historical(repo,token,*,now=None,lookback_hours=72,
-                       max_artifacts=120,opener=_github_open):
+def collect_historical(repo,token,*,now=None,lookback_hours=24,
+                       max_artifacts=250,opener=_github_open):
     if (not REPO_PATTERN.fullmatch(repo) or
             any(part in (".", "..") for part in repo.split("/"))):
         raise ValueError("Invalid repository")
@@ -134,8 +134,8 @@ def collect_historical(repo,token,*,now=None,lookback_hours=72,
 def main():
     parser=argparse.ArgumentParser(description="Historical-only BTC audit")
     parser.add_argument("--repo",default="Elikers/hyperliquid-btc-dashboard")
-    parser.add_argument("--hours",type=int,default=72)
-    parser.add_argument("--max-artifacts",type=int,default=120)
+    parser.add_argument("--hours",type=int,default=24)
+    parser.add_argument("--max-artifacts",type=int,default=250)
     parser.add_argument("--out",type=Path,default=Path("history-output/historical_audit.json"))
     args=parser.parse_args()
     token=os.environ.get("GITHUB_TOKEN")

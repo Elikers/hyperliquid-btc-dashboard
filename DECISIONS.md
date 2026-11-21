@@ -25,3 +25,7 @@ Autonomous work includes safe code hygiene, tests, non-sensitive public market d
 
 ### Updating this log
 Append a new numbered decision with date, what changed, and approval evidence whenever a stable project boundary changes. Do not rewrite history without a clear revision note.
+
+### D-013 — Redundant scheduled-capture research pilot (2026-11-22)
+
+For the next 24h+ observation window, test **two best-effort GitHub Actions schedule opportunities after each 15m candle boundary** at minutes `7,12,22,27,37,42,52,57` UTC. This supersedes D-008's earlier four-slot cron for the **research-only pilot**, not D-008's prohibition on treating Actions as always-on service. Monitor actual scheduled executions, unique forward candle coverage, costs/artifact volumes and API reliability, and revert if regressions are observed. Zero changes to strategy rules, risk, TradingView parity claims, Discord or wallet trading. See [pilot gates](research/REDUNDANT_CAPTURE_PILOT.md).

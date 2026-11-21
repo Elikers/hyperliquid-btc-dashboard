@@ -36,7 +36,7 @@ jobs:
           python -m research.collect_forward_artifacts \
             --repo "${{ github.repository }}" \
             --hours 24 \
-            --max-artifacts 110 \
+            --max-artifacts 250 \
             --out paper-output/daily_forward_audit.json
       - name: Upload read-only paper audit
         uses: actions/upload-artifact@v4

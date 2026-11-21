@@ -118,7 +118,7 @@ def decode_paper_archive(data):
 
 
 def collect_daily(repo,token,*,now=None,lookback_hours=24,
-                  max_artifacts=110,opener=_github_open):
+                  max_artifacts=250,opener=_github_open):
     if not REPO_PATTERN.fullmatch(repo):
         raise ValueError("Invalid GitHub repository path")
     if not 1<=lookback_hours<=720:
@@ -195,7 +195,7 @@ def main():
     parser=argparse.ArgumentParser(description="Read-only daily GitHub paper-trading audit")
     parser.add_argument("--repo",default="Elikers/hyperliquid-btc-dashboard")
     parser.add_argument("--hours",type=int,default=24)
-    parser.add_argument("--max-artifacts",type=int,default=110)
+    parser.add_argument("--max-artifacts",type=int,default=250)
     parser.add_argument("--out",type=Path,default=Path("paper-output/daily_forward_audit.json"))
     args=parser.parse_args()
     token=os.environ.get("GITHUB_TOKEN")

@@ -7,7 +7,7 @@ counts. Do not change the trading engine, collect orders, or send alerts.
 from collections import Counter
 from datetime import datetime, timedelta, timezone
 
-EXPECTED_MINUTES = (2, 17, 32, 47)
+EXPECTED_MINUTES = (7, 12, 22, 27, 37, 42, 52, 57)
 CAPTURE_WORKFLOW = "Capture BTC research candles"
 
 
@@ -66,7 +66,9 @@ def schedule_reliability(runs, *, after, through):
         "kind": "research_only_github_schedule_run_audit_v1",
         "windowStartUtc": first.isoformat(),
         "windowEndUtc": last.isoformat(),
-        "configuredCronUtc": "2,17,32,47 * * * *",
+        "configuredCronUtc": "7,12,22,27,37,42,52,57 * * * *",
+        "configuredOpportunityCountUsesCurrentCronForEntireWindow": True,
+        "comparisonCanBeMisleadingAcrossCronChanges": True,
         "configuredCronOpportunities": expected,
         "observedScheduledRunCount": len(sorted_runs),
         "completedSuccesses": status_counts.get("success", 0),
