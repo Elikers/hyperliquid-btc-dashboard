@@ -46,7 +46,7 @@ def check_candles(candles: Sequence[Mapping], timeframe: str, *, min_count: int 
                 raise ValueError("unexpected candle period boundaries")
             if start % step:
                 raise ValueError("candle time not aligned to interval")
-            if l > min(o, c) or h < max(o, c) or h < l or volume < 0:
+            if min(o, h, l, c) <= 0 or l > min(o, c) or h < max(o, c) or h < l or volume < 0:
                 raise ValueError("invalid OHLCV")
             if previous is not None and start - previous != step:
                 raise ValueError("candle gap, overlap, or wrong ordering")
