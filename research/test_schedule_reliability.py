@@ -13,10 +13,10 @@ def run(i,minute,*,event="schedule",conclusion="success",status="completed",
 
 
 class ScheduleAuditTests(unittest.TestCase):
-    def test_four_configured_opportunities_and_one_actual_run(self):
+    def test_eight_configured_opportunities_and_one_actual_run(self):
         result=schedule_reliability([run(11,3)],after=START,
                           through=START+timedelta(hours=1))
-        self.assertEqual(result["configuredCronOpportunities"],4)
+        self.assertEqual(result["configuredCronOpportunities"],8)
         self.assertEqual(result["observedScheduledRunCount"],1)
         self.assertEqual(result["completedSuccesses"],1)
         self.assertFalse(result["exactMissedCronSlotsVerified"])
