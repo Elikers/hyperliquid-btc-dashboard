@@ -42,3 +42,21 @@ The local history exported **1,204 bars per timeframe**, but that means differen
 4. Measure true out-of-sample forward metrics with fees, slippage and uncertainty; retain the separate macro-OFF Classic, macro-ON Classic, and experimental Lab boundaries.
 
 **No Discord live trade signals, wallet trading, or profitability claim is authorized by this document.**
+
+## ATR warmup sensitivity: independent November 20 replay
+
+The user's existing original-source 15m reference event opened **2026-11-20 14:15 UTC** with entry **62,077.0** and displayed stop **61,667.1**. We independently replayed the 1,187 15m OHLC candles ending at that event and varied the start of ATR14 RMA initialization *without changing ATR period or 1.5× stop multiplier*:
+
+| ATR seed starts at candle index | Candles available | Calculated ATR14 | Calculated LONG stop |
+|---:|---:|---:|---:|
+| 0 | 1,187 | 273.0681301530 | 61,667.39780477 |
+| 100 | 1,087 | 273.0681301530 | 61,667.39780477 |
+| 300 | 887 | 273.0681301530 | 61,667.39780477 |
+| 500 | 687 | 273.0681301530 | 61,667.39780477 |
+| 800 | 387 | 273.0681301531 | 61,667.39780477 |
+| 1,000 | 187 | 273.0682125715 | 61,667.39768114 |
+| 1,100 | 87 | 273.3462974165 | 61,666.98055388 |
+
+**Finding:** The ordinary ATR warmup starting position, so long as hundreds of prior bars are available, does not explain the approximately **0.2978** stop difference. A deliberately short 87-bar warmup can materially affect it, but fitting the seed to a single display is invalid. Next required independent evidence is the original chart provider's OHLC sequence, indicator calculation state and exact signal-close time. This is **not** a price-feed or TradingView verification.
+
+The reusable tool [`atr_seed_audit.py`](atr_seed_audit.py) and its [seven regression tests](test_atr_seed_audit.py) preserve this method for future audited inputs. Synthetic unit tests do not certify the original Pine source.
