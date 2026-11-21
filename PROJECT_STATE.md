@@ -44,6 +44,15 @@ Develop a dependable, independently verified **Hyperliquid BTCUSDC perpetual** r
 - **The first end-to-end daily audit run failed**: [Actions #44897739711](https://github.com/Elikers/hyperliquid-btc-dashboard/actions/runs/44897739711), 401 while downloading an Actions artifact from external signed storage after GitHub's 302 redirect. Unit tests had passed (186), but that was insufficient.
 - [Fix PR #4](https://github.com/Elikers/hyperliquid-btc-dashboard/pull/4) strips the bearer token from cross-host signed artifact redirects, validates HTTPS/host, and adds tests. **Not yet merged or CI-verified as of this update.** Do not report daily audit production success until a real smoke run uploads a valid report.
 
+## Verified daily paper audit integration — 2026-11-21
+
+- Automated, read-only daily GitHub artifact audit merged via [PR #3](https://github.com/Elikers/hyperliquid-btc-dashboard/pull/3) and secure redirect correction [PR #4](https://github.com/Elikers/hyperliquid-btc-dashboard/pull/4); deployed fix commit [`2a587f0`](https://github.com/Elikers/hyperliquid-btc-dashboard/commit/2a587f0004e9587e856f96d2c5e57a8159ea5be5).
+- **Verified full production smoke success:** [BTC paper research daily audit run #44898036259](https://github.com/Elikers/hyperliquid-btc-dashboard/actions/runs/44898036259), `event=push`, after correcting a genuine external artifact redirect HTTP 401 ([earlier failed run #44897739711](https://github.com/Elikers/hyperliquid-btc-dashboard/actions/runs/44897739711)).
+- CI passed at both [pull-request #44898035246](https://github.com/Elikers/hyperliquid-btc-dashboard/actions/runs/44898035246) and [main #44898036198](https://github.com/Elikers/hyperliquid-btc-dashboard/actions/runs/44898036198); **186+ research tests** ran at the earlier integration check.
+- Downloaded actual audit artifact `btc-paper-audit-44898036259` (ID `14704572593`), which reported **2 raw source artifacts**, IDs of runs **44897289838** (`schedule`) and **44895884495** (`push`). Per 15m/30m/1h: **2 distinct closed bars, 0 gaps between those two, 0 hypothetical candidates, 0 resolved trades**. All alert/trading/profitability flags explicitly false.
+- [Daily workflow](.github/workflows/btc-paper-audit.yml) is configured for `23:28 UTC`, with rolling 24h artifact inputs and 90-day audit-report retention. **One successful push smoke does not establish that the daily schedule has executed.** [Implementation/limitations](research/DAILY_PAPER_AUDIT.md).
+- Next work: monitor more `event=schedule` capture and audit executions; build durable cross-day cumulative research reporting (daily 24h reports are not yet a 30-day trade history), and obtain independent source-Pine parity evidence before any profitability or Discord claims.
+
 ## Specific unresolved evidence
 1. **Scheduled recurrence:** First real `event=schedule` capture **succeeded** in [run #44897289838](https://github.com/Elikers/hyperliquid-btc-dashboard/actions/runs/44897289838), 2026-11-21 11:03 UTC. Multiple-hour coverage and missed-trigger rate remain unverified.
 2. **Bar-by-bar parity:** Need independent original-Pine closed-bar factors, zero-signal periods, LONG/SHORT entry times and exits across all three timeframes; unit tests and model-vs-model comparisons are insufficient.
@@ -53,7 +62,7 @@ Develop a dependable, independently verified **Hyperliquid BTCUSDC perpetual** r
 6. **Live service:** No always-on monitoring server; GitHub Pages is browser-only and scheduled Actions are not 24/7 real-time alert delivery.
 
 ## Priorities (execute sequentially; no routine user approvals)
-P0 **First scheduled run verified**, monitor multiple-hour continuity and failed jobs via live GitHub API. P1 **Offline ledger implemented and CI verified**. Next connect read-only artifact discovery/replay and check missing bars without enabling alerts. P2 Pursue independent Pine parity and ATR discrepancies without changing original thresholds. P3 Evaluate out-of-sample net expectancy, drawdown and execution assumptions. P4 Consider secure continuous hosting and Discord only after an explicit readiness and risk review.
+P0 **First scheduled run verified**, monitor multiple-hour continuity and failed jobs via live GitHub API. P1 **Read-only 24h artifact ingestion and offline ledger both implemented; end-to-end push smoke CI verified**. Next verify genuine daily scheduled execution and develop cross-day cumulative history without false claims. P2 Pursue independent Pine parity and ATR discrepancies without changing original thresholds. P3 Evaluate out-of-sample net expectancy, drawdown and execution assumptions. P4 Consider secure continuous hosting and Discord only after an explicit readiness and risk review.
 
 ## Operational rules
 - Read [DECISIONS.md](DECISIONS.md) before modifying strategy or infrastructure.
