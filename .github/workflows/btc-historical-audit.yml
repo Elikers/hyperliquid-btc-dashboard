@@ -1,0 +1,47 @@
+name: BTC historical-only archive audit
+on:
+  schedule:
+    - cron: '38 23 * * *'
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/btc-historical-audit.yml'
+      - 'research/collect_historical_artifacts.py'
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: btc-historical-only-research-audit
+  cancel-in-progress: false
+jobs:
+  historical-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify all research safety tests
+        run: |
+          python -m compileall -q research
+          python -m unittest discover -s research -p 'test_*.py' -q
+      - name: Collect and reconcile historical-only artifacts
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          python -m research.collect_historical_artifacts \
+            --repo "${{ github.repository }}" \
+            --hours 72 \
+            --max-artifacts 120 \
+            --out history-output/historical_audit.json
+      - name: Upload historical-only audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: btc-historical-audit-${{ github.run_id }}
+          path: history-output/historical_audit.json
+          retention-days: 90
+          if-no-files-found: error
