@@ -45,4 +45,8 @@ Charts use [TradingView Lightweight Charts™](https://www.tradingview.com/light
 
 ## Automated research updates
 
-The [hourly BTC snapshot workflow](.github/workflows/btc-forward-capture.yml) now attempts a scheduled, read-only capture of 15m/30m/1h public closed candles. It also produces seven-factor *research observations* in GitHub Actions artifacts (retained seven days). The [eight-factor audit](research/eight_factor_audit.py) and [ATR risk ladder](research/risk_ladder.py) are available for offline verification, but **no signals or Discord messages are sent**. Continuous Nasdaq `CME_MINI:NQ1!` access and TradingView parity remain unresolved. Cron workflows can be delayed or skipped by GitHub; they are not 24/7 services.
+The [15-minute BTC snapshot workflow](.github/workflows/btc-forward-capture.yml) now attempts a scheduled, read-only capture of 15m/30m/1h public closed candles. It also produces seven-factor *research observations* in GitHub Actions artifacts (retained seven days). The [eight-factor audit](research/eight_factor_audit.py) and [ATR risk ladder](research/risk_ladder.py) are available for offline verification, but **no signals or Discord messages are sent**. Continuous Nasdaq `CME_MINI:NQ1!` access and TradingView parity remain unresolved. Cron workflows can be delayed or skipped by GitHub; they are not 24/7 services.
+
+### Capture schedule
+
+BTC-only research snapshots are scheduled four times per hour, at **:02, :17, :32, and :47 UTC** (shortly after each 15-minute candle boundary). Artifacts are retained for **2 days**. GitHub Actions schedules are best-effort, can start late or be skipped, and are **not** a 24/7 live signal service. ChatGPT's separate code/QA automation stays hourly. No Discord trading alerts are enabled.
