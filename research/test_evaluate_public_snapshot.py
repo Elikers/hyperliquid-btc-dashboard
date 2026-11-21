@@ -19,9 +19,9 @@ class SnapshotScoringTests(unittest.TestCase):
     def test_three_timeframes_are_safe(self):
         with tempfile.TemporaryDirectory() as tmp:
             p=Path(tmp)
-            stamp=datetime.fromtimestamp(600*TF_MS["15m"]/1000+30,
+            stamp=datetime.fromtimestamp(2600*TF_MS["15m"]/1000+30,
                                          timezone.utc).isoformat()
-            for tf,n in (("15m",600),("30m",300),("1h",150)):
+            for tf,n in (("15m",2600),("30m",1300),("1h",650)):
                 (p/f"btc_{tf}.json").write_text(json.dumps({
                     "timeframe":tf,"coin":"BTC","discordEligible":False,
                     "capturedAtUtc":stamp,"closedCandles":bars(tf,n),
@@ -37,6 +37,8 @@ class SnapshotScoringTests(unittest.TestCase):
                                  "VIPRASOL_CLASSIC_MACRO_OFF")
                 self.assertFalse(value["discordEligible"])
                 self.assertFalse(value["originalViprasolVerified"])
+                self.assertTrue(value["adr"]["available"],
+                    "Production history must exercise 14 completed days")
             for value in result["timeframes"].values():
                 self.assertFalse(value["discordEligible"])
                 self.assertFalse(value["originalViprasolVerified"])
