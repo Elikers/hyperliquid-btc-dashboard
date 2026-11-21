@@ -41,3 +41,9 @@ The standard-library `parity_checks.py` rejects missing/gapped/invalid candle in
 [`classic_decision.py`](classic_decision.py) implements the **closed-bar EMA9/21 crossover decision**, seven technical-factor booleans plus optional eighth macro boolean, the 5/8 score gate, America/New_York EU/US session hours, weekend block and ADR exhaustion. It returns the reason when a prospective entry is blocked. Tests cover false entries on existing trends, wrong sessions, weekend, invalid macro provenance, and ADR.
 
 **Scope:** It evaluates *already computed* factors, not Pine-equivalent factor calculations or an authenticated macro data feed. `discordEligible` is always `false`. The website and Discord settings are unchanged.
+
+## Seven-factor calculation module
+
+[`factors.py`](factors.py) now calculates research-side EMA9/21, RSI14, MACD12/26/9, DMI/ADX14, 20-bar volume mean, intraday UTC-day VWAP approximation, and last-confirmed 15m RSI for 15m/30m/1h. It returns the seven bullish and bearish factor booleans and scores plus crossover inputs for the existing [Classic decision gate](classic_decision.py). The [unit tests](test_factors.py) cover indicator initialization, future/stale confirmation rejection, invalid candles, and explicit disabled-Discord status.
+
+**Not yet done:** validate against TradingView exact OHLC/volume, VWAP session anchoring, multi-timeframe bar merge; acquire exact `CME_MINI:NQ1!` macro candles; verify factor-by-factor and entry/SL/TP parity. The new module intentionally is **not a live signal engine or automatic alert connector**.
