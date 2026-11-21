@@ -1,0 +1,35 @@
+name: Verify research safety
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'research/**'
+      - '.github/workflows/research-checks.yml'
+  pull_request:
+    paths:
+      - 'research/**'
+      - '.github/workflows/research-checks.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  offline-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Syntax check
+        run: python -m compileall -q research
+      - name: Offline market-data and parity tests
+        run: python -m unittest discover -s research -p 'test_*.py' -v
+      - name: Confirm no live alert workflow exists
+        run: |
+          python - <<'PY'
+          import pathlib
+          src = pathlib.Path('research/parity_checks.py').read_text()
+          assert '"DISABLED"' in src
+          assert '"originalViprasolVerified": False' in src
+          print("Research gate: unverified alerts remain disabled")
+          PY
