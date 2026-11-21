@@ -4,8 +4,11 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/btc-forward-capture.yml'
+  # Research-only redundancy pilot: two chances 7 and 12 minutes after
+  # each 15-minute candle boundary. GitHub cron is best-effort; duplicate
+  # bar closes are de-duplicated by the downstream forward ledger.
   schedule:
-    - cron: '2,17,32,47 * * * *'
+    - cron: '7,12,22,27,37,42,52,57 * * * *'
   workflow_dispatch:
 permissions:
   contents: read
