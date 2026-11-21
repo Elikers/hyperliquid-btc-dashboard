@@ -46,6 +46,13 @@ class CandleTests(unittest.TestCase):
         x[4]["v"] = "-1"
         self.assertFalse(check_candles(x, "15m").acceptable)
 
+    def test_zero_or_negative_prices_fail(self):
+        for field, price in (("o", "0"), ("h", "0"), ("l", "-1"), ("c", "0")):
+            with self.subTest(field=field):
+                x = bars()
+                x[4][field] = price
+                self.assertFalse(check_candles(x, "15m").acceptable)
+
     def test_wrong_timeframe_fails(self):
         self.assertFalse(check_candles(bars(), "2h").acceptable)
 
