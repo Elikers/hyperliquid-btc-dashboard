@@ -37,3 +37,7 @@ These counts represent **observation coverage**, not successful GitHub cron exec
 The report additionally includes `githubScheduleReliability`, obtained with the read-only GitHub Actions API filtered to the actual capture workflow and `event=schedule`. It counts **completed successes, failures, pending and all observed scheduled runs** in the requested window, compares the count with configured `:02,:17,:32,:47 UTC` opportunities and records time gaps *between run creations*. This is **not** an exact count of skipped triggers: GitHub exposes creation time rather than an authoritative scheduled-slot timestamp, and delayed starts can cross a window boundary.
 
 This is intentionally separate from `closedCandleCoverage`: a scheduled run may collect the same close as another run, and a missing run does not mean a historical candle is unavailable from the exchange. Historical recovery is research-only and **cannot** be presented as a forward signal collected at the time. Never impute a trade, entry, or verified Pine signal into missed windows.
+
+## November 22 redundant-capture research pilot
+
+The latest workflow offers two nominal capture attempts after each 15m candle close, eight configured UTC cron opportunities/hour. The rolling 24h forward archive cap is **250**, not 110. Schedule-volume comparisons spanning the cron change are not valid reliability rates. See [pilot design and reversibility](REDUNDANT_CAPTURE_PILOT.md). No guarantee of wall-clock execution or live alerts.
