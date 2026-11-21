@@ -49,6 +49,23 @@ class CaptureTests(unittest.TestCase):
             capture_one("15m",now_ms=150*TF_MS["15m"],
                 fetch=lambda query:{"error":"denied"})
 
+    def test_query_windows_cover_longest_timeframe(self):
+        """15m confirmations must span at least the 1h research lookback."""
+        captured = {}
+        for tf in TF_MS:
+            rows = sample(tf)
+            now = rows[-1]["T"]+5000
+            def record(query, rows=rows, tf=tf):
+                captured[tf] = query["req"]
+                return rows
+            capture_one(tf, now_ms=now, fetch=record)
+        lookback_ms = {
+            tf: captured[tf]["endTime"]-captured[tf]["startTime"]
+            for tf in TF_MS
+        }
+        self.assertGreaterEqual(lookback_ms["15m"], lookback_ms["1h"])
+        self.assertGreaterEqual(lookback_ms["30m"], lookback_ms["1h"])
+
     def test_rejects_unknown_timeframe(self):
         with self.assertRaises(ValueError):
             capture_one("5m")
