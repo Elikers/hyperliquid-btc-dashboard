@@ -30,9 +30,14 @@ def capture_one(timeframe, *, now_ms=None, fetch=make_request):
         raise ValueError("Unsupported interval")
     now_ms = int(time.time()*1000) if now_ms is None else int(now_ms)
     step = TF_MS[timeframe]
+    # Keep a common 650-hour lookback across timeframes. The 1h engine
+    # needs 600+ closed candles, while the same time span requires 2600
+    # separate 15m candles for a fresh confirmation on the final 1h bar.
+    # Hyperliquid candleSnapshot supports up to 5000 recent candles.
+    lookback_bars = {"15m": 2600, "30m": 1300, "1h": 650}[timeframe]
     query = {"type":"candleSnapshot","req":{
         "coin":"BTC","interval":timeframe,
-        "startTime":now_ms-step*600,"endTime":now_ms}}
+        "startTime":now_ms-step*lookback_bars,"endTime":now_ms}}
     candles=fetch(query)
     if not isinstance(candles,list):
         raise RuntimeError("Unexpected exchange response")
