@@ -110,7 +110,7 @@ class HistoricalCollectorTests(unittest.TestCase):
         def opener(req,timeout=30):
             if "/zip" in req.full_url:
                 return Response(zipped(a))
-            if "page=1" in req.full_url:
+            if req.full_url.endswith("page=1"):
                 return Response(json.dumps({"artifacts":data}).encode())
             return Response(json.dumps({"artifacts":[]}).encode())
         r=collect_historical("Elikers/hyperliquid-btc-dashboard","t",now=NOW,
