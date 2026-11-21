@@ -73,6 +73,17 @@ class SnapshotScoringTests(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError,"Cross-timeframe"):
                 score_snapshots(p)
 
+    def test_mixed_capture_times_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            p=Path(tmp)
+            write_feeds(p,sample_feeds())
+            path=p/"btc_1h.json"
+            payload=json.loads(path.read_text(encoding="utf-8"))
+            payload["capturedAtUtc"]="1970-01-01T00:00:01+00:00"
+            path.write_text(json.dumps(payload),encoding="utf-8")
+            with self.assertRaisesRegex(RuntimeError,"Mixed observation"):
+                score_snapshots(p)
+
     def test_missing_files_do_not_create_fake_research(self):
         with tempfile.TemporaryDirectory() as tmp:
             with self.assertRaises(FileNotFoundError):
