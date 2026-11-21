@@ -9,6 +9,7 @@ from datetime import datetime, timezone
 
 from research.parity_checks import TF_MS
 from research.pipeline import calculate_research_candidate
+from research.btc_only_lab import evaluate_btc_only_lab
 
 
 def score_snapshots(folder="capture-output"):
@@ -23,6 +24,7 @@ def score_snapshots(folder="capture-output"):
             raise ValueError("Research-data safety flag missing")
         loaded[timeframe]=d
     evidence={}
+    lab_evidence={}
     for timeframe in TF_MS:
         d=loaded[timeframe]
         captured=datetime.fromisoformat(d["capturedAtUtc"])
@@ -35,9 +37,18 @@ def score_snapshots(folder="capture-output"):
         if value["discordEligible"] or value["researchDecision"]["discordEligible"]:
             raise RuntimeError("Research gate failed")
         evidence[timeframe]=value
+        # Independent BTC-only Lab is separately labeled, unverified and not
+        # eligible for Discord; Classic calculation and public site unchanged.
+        lab=evaluate_btc_only_lab(d["closedCandles"],
+            loaded["15m"]["closedCandles"],timeframe=timeframe,
+            current_ms=sampled_at)
+        if lab["discordEligible"] or lab["originalViprasolVerified"]:
+            raise RuntimeError("Unverified Lab must never enable alerts")
+        lab_evidence[timeframe]=lab
     return {"kind":"public_btc_seven_factor_forward_research",
             "capturedAtUtc":loaded["15m"]["capturedAtUtc"],
-            "timeframes":evidence,"originalViprasolVerified":False,
+            "timeframes":evidence,"btcOnlyLab":lab_evidence,
+            "originalViprasolVerified":False,
             "discordEligible":False,"liveSignalAlerts":False,
             "limitations":["No original CME_MINI:NQ1! factor",
                            "No exact TradingView VWAP or barmerge parity"]}
