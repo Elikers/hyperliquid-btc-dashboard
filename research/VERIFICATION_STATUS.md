@@ -40,3 +40,18 @@ No event collection or module in this repository has approval to send a live tra
 3. Check full event series (not only candidate bars) for false negatives, false positives and latency.
 4. Analyze multi-period paper outcomes with fees, slippage and drawdowns; do not promote on one test.
 5. Only after independently verified evidence and secure hosting should sending trade notifications be reconsidered. Never execute wallet trades without explicit authorization.
+
+## November 21 next-iteration evidence
+
+- Exact user-supplied Viprasol Pine v6 source SHA-256: `00d41c3abfccb3747506185bf0515684b5d8cdaa4b85c4546384914e623f34de`. This makes later source revisions distinguishable; source checksum **does not** prove Pine/engine parity.
+- Original Pine default includes `ta.atr(14)`, 1.5× multiplier, `ta.vwap(hlc3)`, `request.security(..., "15", ta.rsi(close,14), lookahead_off)`, and Macro-OFF score denominator 7. The Python defaults are source-aligned but still require independent output comparisons.
+- 1,187 real 15m candles before the 2026-11-20 reference event independently yield ATR `273.0681301530` and LONG stop `61,667.39780477` vs screenshot `61,667.1`. Seed starts 0, 100, 300, 500, and 800 bars earlier converge to essentially the same result. This is documented in [the detailed analysis](FEED_PARITY_ATR_DIAGNOSIS_2026-11-21.md). The unresolved stop discrepancy cannot be responsibly "fixed" by adjusting ATR to fit one screenshot.
+- The GitHub 15-minute capture now freezes **one timestamp across all three timeframe requests**. The scorer rejects mixed-timestamp 15m/30m/1h snapshots, so cross-timeframe integrity cannot silently combine different observation instants. [Capture regression tests](test_capture_public_btc.py) and [scorer regression tests](test_evaluate_public_snapshot.py) cover this.
+- Two existing independently runnable local test suites were executed here: `viprasol_research_work` **15/15 passing**, `btc_validation_current/research` **19/19 passing**. These are legacy/offline suites; they **do not** certify the latest connected GitHub commit's full CI.
+- The GitHub Actions push/schedule run history was not obtainable through available connector APIs; **success or failure of the newly committed Actions tests remains unverified**. Do not equate confirmed GitHub commits with successful workflow execution.
+
+Official external source: [TradingView's current docs](https://www.tradingview.com/pine-script-docs/concepts/other-timeframes-and-data/) explain that `request.security` on a lower timeframe returns the last intrabar historically under `lookahead_off`, while realtime behavior has caveats. This matters for the Pine 15m RSI confirmation running on a 30m or 1h chart.
+
+### Strict next gate
+
+Obtain **bar-aligned independent Pine reference events** for macro-OFF Classic (including zero-signal closed bars) and measure exact per-factor, entry, SL, and TP agreement across all three chart timeframes. Then collect enough fresh forward samples for fee-adjusted expectancy and drawdown. No trading, Discord trade alerts, or claims of profitability before those gates.
