@@ -1,3 +1,15 @@
+## Project continuity — start here when opening a new ChatGPT chat
+
+This project does **not** depend on the conversation history as its main memory. Read these current GitHub documents in order:
+
+1. [PROJECT_STATE.md](PROJECT_STATE.md) — dated status, verified evidence, next engineering milestone
+2. [DECISIONS.md](DECISIONS.md) — stable boundaries and user-approved safety constraints
+3. [HANDOFF.md](HANDOFF.md) — bootstrapping a new conversation, current run links and safe resume instructions
+4. [CHATGPT_PROJECT_SETUP.md](CHATGPT_PROJECT_SETUP.md) — one-time ChatGPT Projects UI setup and reusable instructions
+
+Use current source files and GitHub Actions run logs to confirm whether the dated state remains accurate. The hourly autonomous QA should update the state/handoff only after a verified material change. A ChatGPT Project must be created by the account owner in ChatGPT; GitHub documentation alone does not create one.
+
+---
 # Hyperliquid BTC Live Dashboard
 
 A **read-only public market-data dashboard** for the native Hyperliquid BTC perpetual contract (TradingView label: `HYPERLIQUID:BTCUSDC.P`).
