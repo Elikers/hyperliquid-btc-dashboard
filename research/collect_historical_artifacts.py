@@ -68,7 +68,8 @@ def decode_history_zip(data):
 
 def collect_historical(repo,token,*,now=None,lookback_hours=72,
                        max_artifacts=120,opener=_github_open):
-    if not REPO_PATTERN.fullmatch(repo):
+    if (not REPO_PATTERN.fullmatch(repo) or
+            any(part in (".", "..") for part in repo.split("/"))):
         raise ValueError("Invalid repository")
     if not token:
         raise ValueError("GitHub read-only token required")
