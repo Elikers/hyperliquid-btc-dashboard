@@ -42,3 +42,7 @@ Charts use [TradingView Lightweight Charts™](https://www.tradingview.com/light
 
 **This does not enable automatic Discord trade alerts.** Nasdaq `CME_MINI:NQ1!` data provenance and full original Pine parity are still unverified, so all Classic research results remain non-actionable. The public Pages chart continues operating independently of the research checks.
 
+
+## Automated research updates
+
+The [hourly BTC snapshot workflow](.github/workflows/btc-forward-capture.yml) now attempts a scheduled, read-only capture of 15m/30m/1h public closed candles. It also produces seven-factor *research observations* in GitHub Actions artifacts (retained seven days). The [eight-factor audit](research/eight_factor_audit.py) and [ATR risk ladder](research/risk_ladder.py) are available for offline verification, but **no signals or Discord messages are sent**. Continuous Nasdaq `CME_MINI:NQ1!` access and TradingView parity remain unresolved. Cron workflows can be delayed or skipped by GitHub; they are not 24/7 services.
