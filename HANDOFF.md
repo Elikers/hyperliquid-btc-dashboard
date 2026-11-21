@@ -44,6 +44,13 @@
 - First genuine scheduled 15-minute source capture was [#44897289838](https://github.com/Elikers/hyperliquid-btc-dashboard/actions/runs/44897289838), successful. A **daily** `event=schedule` paper audit and repeated multi-hour 15m source runs are **not yet confirmed**.
 - Workflow: [`.github/workflows/btc-paper-audit.yml`](.github/workflows/btc-paper-audit.yml) scheduled `23:28 UTC`, read-only `actions:read` token, daily rolling 24h data and 90-day report artifact. No cumulative 30-day performance dataset yet. Independent original Viprasol Pine parity, especially ATR stop difference, still unverified.
 
+## Verified capture-cadence finding — 2026-11-22 Asia/Manila
+
+- GitHub main at last check: `36fe95119667d0344834d3a640d6a012988375e9`.
+- **13** genuinely scheduled BTC capture runs completed successfully from **2026-11-21 11:03:53 UTC** through **21:24:31 UTC**, latest [Actions #44951382679](https://github.com/Elikers/hyperliquid-btc-dashboard/actions/runs/44951382679). Run creation times have **41–63 minute gaps**, markedly sparser than configured `:02, :17, :32, :47 UTC`. Do not claim four observations/hour or exact reason for skipped/delayed scheduling; check candle artifact timestamps separately.
+- Daily paper audit only confirmed as successful push smoke, not as scheduled execution, in latest run history. Its configured daily schedule is 23:28 UTC.
+- Priority: rigorous schedule/candle coverage metrics and missing-data quarantine, then cumulative evidence and independent Pine parity. Do not activate any trading alerts.
+
 ## Next unfinished task
 Check actual GitHub Actions runs for **multiple successful `event=schedule` 15-minute BTC captures** and the first successful `event=schedule` **daily paper audit**; do not infer cadence from the cron file. Build an evidence-preserving, cross-day cumulative paper ledger from successive retained audit/source artifacts, with calendar gaps, deduplicated candles, incomplete/open trades, and conservative illustrative fees. Keep an explicit minimum evidence threshold before reporting statistical performance; continue bar-by-bar original-Pine Macro-Off parity and ATR investigation. No live alerts, wallet trading, or performance promises.
 
