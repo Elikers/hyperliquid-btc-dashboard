@@ -5,9 +5,10 @@ import unittest
 import zipfile
 from datetime import datetime,timezone
 from urllib.parse import urlsplit,parse_qs
+from urllib.request import Request
 
 from research.collect_forward_artifacts import (
-    select_artifacts,decode_paper_archive,collect_daily,_read)
+    select_artifacts,decode_paper_archive,collect_daily,_read,_SafeArtifactRedirect)
 
 
 NOW=datetime(2026,11,21,12,0,tzinfo=timezone.utc)
@@ -62,6 +63,29 @@ class Response:
 
 
 class CollectTests(unittest.TestCase):
+    def test_cross_host_signed_artifact_redirect_strips_bearer(self):
+        original=Request("https://api.github.com/repos/Elikers/x/actions/artifacts/42/zip",
+                         headers={"Authorization":"Bearer TEST_SECRET",
+                                  "X-GitHub-Api-Version":"2022-11-28"})
+        url="https://productionresultssa1.blob.core.windows.net/signed.zip?sig=test"
+        redirected=_SafeArtifactRedirect().redirect_request(
+            original,None,302,"Found",{},url)
+        self.assertEqual(redirected.full_url,url)
+        self.assertIsNone(redirected.get_header("Authorization"))
+        self.assertNotIn("TEST_SECRET",str(redirected.headers))
+
+    def test_unknown_archive_redirect_host_rejected(self):
+        original=Request("https://api.github.com/repos/Elikers/x/actions/artifacts/42/zip")
+        with self.assertRaisesRegex(ValueError,"Unexpected external"):
+            _SafeArtifactRedirect().redirect_request(
+                original,None,302,"Found",{},"https://example.org/archive.zip")
+
+    def test_unencrypted_redirect_rejected(self):
+        original=Request("https://api.github.com/repos/Elikers/x/actions/artifacts/42/zip")
+        with self.assertRaises(ValueError):
+            _SafeArtifactRedirect().redirect_request(
+                original,None,302,"Found",{},"http://productionresultssa1.blob.core.windows.net/test")
+
     def test_select_only_main_valid_nonexpired_recent(self):
         items=[metadata(1,10),metadata(2,20,branch="test"),
                metadata(3,30,expired=True),metadata(4,40,name="btc-research-candles-40"),
