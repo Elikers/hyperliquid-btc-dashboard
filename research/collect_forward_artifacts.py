@@ -17,6 +17,7 @@ import zipfile
 
 from research.forward_paper_ledger import analyze_forward_records
 from research.observation_coverage import observation_coverage
+from research.schedule_reliability import schedule_reliability
 
 PREFIX="btc-paper-evidence-"
 MAX_ARCHIVE_BYTES=2_000_000
@@ -153,11 +154,30 @@ def collect_daily(repo,token,*,now=None,lookback_hours=24,
         url=f"https://api.github.com/repos/{repo}/actions/artifacts/{item['id']}/zip"
         data=_read(url,token,opener=opener)
         records.append(decode_paper_archive(data))
+    # Audit GitHub scheduled executions separately from exchange candle
+    # coverage. Only actual run records count, never synthetic cron events.
+    scheduled_runs=[]
+    for page in range(1,11):
+        url=(f"https://api.github.com/repos/{repo}/actions/workflows/"
+             f"btc-forward-capture.yml/runs?event=schedule&per_page=100&page={page}")
+        payload=json.loads(_read(url,token,opener=opener))
+        batch=payload.get("workflow_runs")
+        if not isinstance(batch,list):
+            raise ValueError("Invalid GitHub scheduled run API response")
+        scheduled_runs.extend(batch)
+        if not batch:
+            break
+        created=[datetime.fromisoformat(str(x["created_at"]).replace("Z","+00:00"))
+                 for x in batch]
+        if max(created)<after:
+            break
     results=analyze_forward_records(records,one_way_cost_bps=7)
     # The ledger validates integrity and trading-disabled flags before we
     # measure expected-vs-observed closes over the ENTIRE requested window.
     results["closedCandleCoverage"]=observation_coverage(
         records,after=after,through=now)
+    results["githubScheduleReliability"]=schedule_reliability(
+        scheduled_runs,after=after,through=now)
     for tf,entry in results["byTimeframe"].items():
         entry["performanceSufficient"]=False
     results["collection"]={"repository":repo,"lookbackHours":lookback_hours,
@@ -196,6 +216,10 @@ def main():
         print(tf,"coverage:",score["observedUniqueClosedBars"],"/",
               score["expectedClosedBars"],"closed candles; unobserved:",
               score["unobservedClosedBars"])
+    health=result["githubScheduleReliability"]
+    print("GitHub scheduled capture runs:",health["observedScheduledRunCount"],
+          "/",health["configuredCronOpportunities"],
+          "configured opportunities (NOT exact missed-slot count)")
     print("Profitability and Pine parity NOT verified; Discord and trading OFF")
 
 
