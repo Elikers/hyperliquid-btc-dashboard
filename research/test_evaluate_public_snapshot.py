@@ -29,6 +29,14 @@ class SnapshotScoringTests(unittest.TestCase):
             result=score_snapshots(p)
             self.assertEqual(set(result["timeframes"]),set(TF_MS))
             self.assertFalse(result["discordEligible"])
+            self.assertEqual(set(result["viprasolClassicMacroOff"]),
+                             set(TF_MS))
+            self.assertEqual(set(result["btcOnlyLab"]),set(TF_MS))
+            for value in result["viprasolClassicMacroOff"].values():
+                self.assertEqual(value["configuration"],
+                                 "VIPRASOL_CLASSIC_MACRO_OFF")
+                self.assertFalse(value["discordEligible"])
+                self.assertFalse(value["originalViprasolVerified"])
             for value in result["timeframes"].values():
                 self.assertFalse(value["discordEligible"])
                 self.assertFalse(value["originalViprasolVerified"])
