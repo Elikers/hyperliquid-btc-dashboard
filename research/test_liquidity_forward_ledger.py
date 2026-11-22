@@ -45,21 +45,41 @@ class LabForwardLedgerTests(unittest.TestCase):
         self.assertFalse(report["discordEligible"])
 
     def test_resolve_only_with_actual_later_record(self):
-        report=ledger([make_record(0,True),make_record(1)])
+        report=ledger([make_record(0,True),make_record(1),make_record(2)])
         self.assertEqual(report["timeframes"]["1h"]["candidateCount"],1)
         self.assertEqual(report["timeframes"]["1h"]["resolved"],1)
         self.assertEqual(report["trades"][0]["status"],"TP3")
+        self.assertEqual(report["trades"][0]["preObservationOpensExcluded"],1)
+        self.assertEqual(report["trades"][0]["firstExecutableBarOpenMs"],7200000)
+        self.assertTrue(report["trades"][0]["entryTimeCausal"])
         self.assertGreater(report["timeframes"]["1h"]["netRSumByOneWayCostBps"]["7"],0)
 
     def test_missing_future_is_not_resolved(self):
         report=ledger([make_record(0,True)])
-        self.assertEqual(report["trades"][0]["status"],"OPEN")
+        self.assertEqual(report["trades"][0]["status"],"AWAITING_EXECUTABLE_OPEN")
         self.assertEqual(report["timeframes"]["1h"]["resolved"],0)
 
     def test_gap_is_quarantined(self):
         report=ledger([make_record(0,True),make_record(2)])
         self.assertEqual(report["trades"][0]["status"],"DATA_GAP")
         self.assertEqual(report["timeframes"]["1h"]["resolved"],0)
+
+
+    def test_prior_open_is_not_assumed_executable(self):
+        report=ledger([make_record(0,True),make_record(1)])
+        trade=report["trades"][0]
+        self.assertEqual(trade["status"],"AWAITING_EXECUTABLE_OPEN")
+        self.assertIsNone(trade["netRByOneWayCostBps"])
+        self.assertEqual(trade["preObservationOpensExcluded"],1)
+        self.assertIsNone(trade["firstExecutableBarOpenMs"])
+        self.assertEqual(report["timeframes"]["1h"]["resolved"],0)
+
+    def test_entry_at_future_open_after_capture_is_eligible(self):
+        report=ledger([make_record(0,True),make_record(1),make_record(2)])
+        trade=report["trades"][0]
+        observed_ms=datetime.fromisoformat(trade["firstObservedUtc"]).timestamp()*1000
+        self.assertGreaterEqual(trade["firstExecutableBarOpenMs"],observed_ms)
+        self.assertEqual(trade["status"],"TP3")
 
     def test_duplicate_deduplicated(self):
         x=make_record()
