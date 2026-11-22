@@ -58,7 +58,9 @@ def decode_snapshot_zip(raw):
     return result
 
 
-def validated_candles(snapshots):
+def validated_candles(snapshots, *, min_history_bars=650):
+    if not isinstance(min_history_bars, int) or isinstance(min_history_bars, bool) or not 500 <= min_history_bars <= 650:
+        raise ValueError('Unsupported minimum historical warmup length')
     if set(snapshots)!=set(STEPS):
         raise ValueError("Unexpected source timeframes")
     instants={snapshots[tf].get("capturedAtUtc") for tf in STEPS}
@@ -77,7 +79,7 @@ def validated_candles(snapshots):
             snap.get("viprasolVerified") is not False or snap.get("discordEligible") is not False):
             raise ValueError("Unverified or wrong market snapshot")
         bars=clean(snap.get("closedCandles",[]),step)
-        if len(bars)<650:
+        if len(bars)<min_history_bars:
             raise ValueError("Insufficient backtest warmup history")
         if int(snap.get("lastCloseMs",-1))!=bars[-1]["T"]:
             raise ValueError("Snapshot latest close mismatch")
@@ -122,8 +124,8 @@ def _exit_simulation(candidate, future):
             "grossR":None,"oneWayCostsNetR":None}
 
 
-def backtest_research(snapshots, *, source_run_id=None):
-    candles,captured=validated_candles(snapshots)
+def backtest_research(snapshots, *, source_run_id=None, min_history_bars=650):
+    candles,captured=validated_candles(snapshots,min_history_bars=min_history_bars)
     result={}
     entries=[]
     for tf,step in STEPS.items():

@@ -14,9 +14,9 @@ CHOP_CUTOFF = 61.8
 COST_KEYS = ("0", "7", "15")
 
 
-def compare_historical_paper(snapshots, *, source_run_id=None):
-    candles, _ = validated_candles(snapshots)
-    baseline = backtest_research(snapshots, source_run_id=source_run_id)
+def compare_historical_paper(snapshots, *, source_run_id=None, min_history_bars=650):
+    candles, _ = validated_candles(snapshots, min_history_bars=min_history_bars)
+    baseline = backtest_research(snapshots, source_run_id=source_run_id, min_history_bars=min_history_bars)
     outcomes = {}
     comparisons = []
     for tf, bars in candles.items():
