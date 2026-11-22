@@ -36,6 +36,8 @@ jobs:
         run: python -m research.evaluate_public_snapshot
       - name: Build compact paper evidence
         run: python -m research.forward_observation
+      - name: Capture prospectively observed liquidity Lab candidates separately
+        run: python -m research.liquidity_forward_observation
       - name: Archive already-fetched historical candles (never forward signals)
         run: python -m research.historical_candle_archive
       - name: Upload historical-only candle recovery archive
@@ -43,6 +45,13 @@ jobs:
         with:
           name: btc-historical-candles-${{ github.run_id }}
           path: capture-output/historical_candles_only.json
+          retention-days: 30
+          if-no-files-found: error
+      - name: Upload isolated 30-day liquidity Lab forward observations
+        uses: actions/upload-artifact@v4
+        with:
+          name: btc-liquidity-forward-${{ github.run_id }}
+          path: capture-output/liquidity_lab_forward_observation.json
           retention-days: 30
           if-no-files-found: error
       - name: Upload compact 30-day forward observations
