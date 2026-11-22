@@ -1,5 +1,8 @@
 name: BTC single liquidity entry-swap historical Lab
 on:
+  # Best-effort daily historical BTC replay; overlaps are not live-forward trades.
+  schedule:
+    - cron: '11 4 * * *'
   workflow_dispatch:
   push:
     branches: [main]
