@@ -17,7 +17,7 @@ from research.instant_paper_comparison import compare_historical_paper
 # around 2026-10-25 21:30 UTC, so even holdout exit observations end before
 # 2026-10-25 00:00 UTC: no overlapping OHLC input or trade lifecycle.
 HOLDOUT_END_MS = 1792886400000  # 2026-10-25T00:00:00Z
-BARS = {"15m":2600, "30m":1300, "1h":650}
+BARS = {"15m":2200, "30m":1100, "1h":550}
 SOURCE = "Hyperliquid official public candleSnapshot API"
 
 
@@ -58,6 +58,8 @@ def build_holdout_snapshots(*, acquired_ms=None, fetch=make_request):
 def research_holdout(*, acquired_ms=None, fetch=make_request):
     acquisition = int(time.time()*1000) if acquired_ms is None else int(acquired_ms)
     result={
+        "selectedWindowBars":dict(BARS),
+        "minimumWarmupBars":500,
         "kind":"NONOVERLAPPING_HISTORICAL_HYPERLIQUID_BTC_HOLDOUT_V1",
         "market":"HYPERLIQUID:BTCUSDC.P",
         "fixedHoldoutEndMs":HOLDOUT_END_MS,
@@ -74,7 +76,7 @@ def research_holdout(*, acquired_ms=None, fetch=make_request):
     }
     try:
         snapshots=build_holdout_snapshots(acquired_ms=acquisition,fetch=fetch)
-        result["comparison"]=compare_historical_paper(snapshots)
+        result["comparison"]=compare_historical_paper(snapshots, min_history_bars=500)
         result["status"]="COMPLETED_HISTORICAL_ONLY"
     except (ValueError, RuntimeError, OSError, TimeoutError) as exc:
         # No fallback to overlapping or third-party source data. Transport
