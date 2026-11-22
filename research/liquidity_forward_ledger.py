@@ -89,18 +89,30 @@ def ledger(records):
             candidate=indexed[tf][end]["data"]["researchCandidate"]
             if candidate is None:
                 continue
+            observed_at=indexed[tf][end]["stamp"]
+            observed_ms=observed_at.timestamp()*1000
             subsequent=[]
             expected=end+step
             gap=False
+            skipped_pre_observation_bars=0
+            first_executable_open_ms=None
             for later in ends[pos+1:]:
                 if later!=expected:
                     gap=True
                     break
-                later_bar=indexed[tf][later]["data"]["bar"]
-                subsequent.append(later_bar)
+                future_open_ms=later-step+1
+                # We cannot execute at an opening that predates the actual
+                # capture/decision timestamp. An after-close GitHub job usually
+                # observes the immediately following candle *after* its open.
+                if future_open_ms < observed_ms:
+                    skipped_pre_observation_bars+=1
+                else:
+                    if first_executable_open_ms is None:
+                        first_executable_open_ms=future_open_ms
+                    subsequent.append(indexed[tf][later]["data"]["bar"])
                 expected+=step
             if not subsequent:
-                status="DATA_GAP" if gap else "OPEN"
+                status="DATA_GAP" if gap else "AWAITING_EXECUTABLE_OPEN"
                 outcome={"status":status,"netRByOneWayCostBps":None}
             else:
                 outcome=next_open_stress(candidate["side"],
@@ -110,9 +122,13 @@ def ledger(records):
                     outcome["status"]="DATA_GAP"
             trades.append({
                 "timeframe":tf,"side":candidate["side"],
-                "signalCloseMs":end,"firstObservedUtc":indexed[tf][end]["stamp"].isoformat(),
+                "signalCloseMs":end,"firstObservedUtc":observed_at.isoformat(),
                 "status":outcome["status"],
                 "laterConsecutiveBars":len(subsequent),
+                "preObservationOpensExcluded":skipped_pre_observation_bars,
+                "firstExecutableBarOpenMs":first_executable_open_ms,
+                "entryTimeCausal":first_executable_open_ms is None or
+                                  first_executable_open_ms>=observed_ms,
                 "netRByOneWayCostBps":outcome["netRByOneWayCostBps"],
                 "researchOnly":True,"discordEligible":False,
             })
@@ -137,7 +153,9 @@ def ledger(records):
         "limitations":[
             "Only outcomes from later actual captured consecutive closed candles",
             "Missing observations quarantine paper outcomes, never backfilled",
-            "Next-open fill adverse 3bps plus hypothetical 0/7/15bps one-way costs",
+            "Only an opening at or after actual captured decision time is eligible",
+            "Skipped already-open candle is observed for continuity but not tradable retroactively",
+            "Next eligible open adverse 3bps plus hypothetical 0/7/15bps one-way costs",
             "No broker fills, intrabar sequence, funding, leverage or portfolio equity",
             "No original TradingView Pine bar-by-bar parity",
         ],
