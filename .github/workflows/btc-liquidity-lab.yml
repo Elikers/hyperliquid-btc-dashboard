@@ -1,0 +1,41 @@
+name: BTC single liquidity entry-swap historical Lab
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/btc-liquidity-lab.yml'
+      - 'research/lab_liquidity.py'
+      - 'research/lab_liquidity_replay.py'
+      - 'research/test_lab_liquidity.py'
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: btc-liquidity-lab
+  cancel-in-progress: false
+jobs:
+  research:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify research safety and offline tests
+        run: |
+          python -m compileall -q research
+          python -m unittest discover -s research -p 'test_*.py' -q
+      - name: Compare fixed Classic and liquidity sweep trigger with next-open stress
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          python -m research.lab_liquidity_replay --repo "${{ github.repository }}" --out test-output/liquidity_lab_replay.json
+      - name: Preserve research evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: btc-liquidity-lab-${{ github.run_id }}
+          path: test-output/liquidity_lab_replay.json
+          retention-days: 90
+          if-no-files-found: error
