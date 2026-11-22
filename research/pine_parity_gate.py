@@ -67,6 +67,7 @@ def audit(snapshots, reference, *, evaluator=evaluate_classic_macro_off):
             if (not isinstance(refbull,dict) or not isinstance(refbear,dict) or
                 set(refbull)!=FACTOR_SET or set(refbear)!=FACTOR_SET or
                 any(type(x) is not bool for x in list(refbull.values())+list(refbear.values())) or
+                "hypotheticalDirection" not in row or "rawCrossover" not in row or
                 row.get("hypotheticalDirection") not in (None,"LONG","SHORT") or
                 row.get("rawCrossover") not in (None,"LONG","SHORT")):
                 blockers.append(f"{tf}:MISSING_SOURCE_FACTOR_OR_EVENT")
