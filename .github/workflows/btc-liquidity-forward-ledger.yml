@@ -1,0 +1,42 @@
+name: BTC prospective liquidity Lab paper ledger
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '36 23 * * *'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/btc-liquidity-forward-ledger.yml'
+      - 'research/liquidity_forward_ledger.py'
+      - 'research/test_liquidity_forward_ledger.py'
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: btc-liquidity-forward-ledger
+  cancel-in-progress: false
+jobs:
+  research:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run offline research safety suite
+        run: |
+          python -m compileall -q research
+          python -m unittest discover -s research -p 'test_*.py' -q
+      - name: Audit separately signed prospective BTC Lab observations
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          python -m research.liquidity_forward_ledger --repo "${{ github.repository }}" --hours 24 --out test-output/liquidity_forward_ledger.json
+      - name: Upload research-only outcome and missing-data evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: btc-liquidity-forward-ledger-${{ github.run_id }}
+          path: test-output/liquidity_forward_ledger.json
+          retention-days: 90
+          if-no-files-found: error
