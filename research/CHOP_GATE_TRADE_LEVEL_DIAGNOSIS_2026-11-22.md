@@ -2,7 +2,7 @@
 
 ## Provenance
 - Research source: uploaded GitHub Actions artifact `btc-backtest-forward-research-44964122779`, artifact **14730284722**, from [successful main run #44964122779](https://github.com/Elikers/hyperliquid-btc-dashboard/actions/runs/44964122779) at commit `dec16f8d368418b1722507ea1580ee118489ac60`.
-- ZIP was downloaded and its three JSON members **opened and parsed**: `historical_backtest.json`, `instant_paper_comparison.json`, `forward_audit.json`. The source historical snapshot run is `44963073368`. The comparison is Python Classic **approximation**, not independent original Viprasol Pine output.
+- ZIP SHA-256 **verified** against GitHub's artifact digest: `1d6793ef067ff7de47bf6a281ccc4a3e54f4369f8947edbcc418c7638d92d018`. All 27 trade entries and each timeframe's retained/skipped Classic net-R arithmetic were independently re-summed and matched the saved report. ZIP was downloaded and its three JSON members **opened and parsed**: `historical_backtest.json`, `instant_paper_comparison.json`, `forward_audit.json`. The source historical snapshot run is `44963073368`. The comparison is Python Classic **approximation**, not independent original Viprasol Pine output.
 - Costs are illustrative combined fee+slippage **7 bps per side**; net R is normalized per hypothetical entry, not portfolio PnL.
 - Exact run artifact includes all 27 trade records, filter decisions, 0/7/15 bps sensitivities, and safety flags. This is **descriptive research on the same sampled dataset**, not untouched out-of-sample or live forward validation.
 
