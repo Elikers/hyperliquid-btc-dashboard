@@ -1,0 +1,34 @@
+name: BTC original Pine parity evidence gate
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/btc-pine-parity-gate.yml'
+      - 'research/pine_parity_gate.py'
+      - 'research/test_pine_parity_gate.py'
+permissions:
+  contents: read
+jobs:
+  parity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify research code and safety regression tests
+        run: |
+          python -m compileall -q research
+          python -m unittest discover -s research -p 'test_*.py' -q
+      - name: Audit independent original Pine reference availability
+        run: |
+          python -m research.pine_parity_gate --out test-output/pine_parity_gate.json
+      - name: Upload explicit parity blockers
+        uses: actions/upload-artifact@v4
+        with:
+          name: btc-original-pine-parity-gate-${{ github.run_id }}
+          path: test-output/pine_parity_gate.json
+          retention-days: 90
+          if-no-files-found: error
