@@ -1,0 +1,37 @@
+name: BTC strict independent historical holdout research
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/btc-nonoverlap-holdout.yml'
+      - 'research/nonoverlap_holdout.py'
+      - 'research/test_nonoverlap_holdout.py'
+permissions:
+  contents: read
+concurrency:
+  group: btc-nonoverlap-holdout
+  cancel-in-progress: false
+jobs:
+  holdout:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run research safety suite
+        run: |
+          python -m compileall -q research
+          python -m unittest discover -s research -p 'test_*.py' -q
+      - name: Request genuinely non-overlapping historical BTC bars and compare fixed rules
+        run: |
+          python -m research.nonoverlap_holdout --out test-output/holdout_research.json
+      - name: Upload real outcome or explicit unavailable verdict
+        uses: actions/upload-artifact@v4
+        with:
+          name: btc-nonoverlap-holdout-${{ github.run_id }}
+          path: test-output/holdout_research.json
+          retention-days: 90
+          if-no-files-found: error
