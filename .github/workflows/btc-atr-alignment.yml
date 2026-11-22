@@ -1,0 +1,37 @@
+name: BTC ATR screenshot alignment research
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/btc-atr-alignment.yml'
+      - 'research/atr_reference_alignment.py'
+      - 'research/test_atr_reference_alignment.py'
+permissions:
+  contents: read
+  actions: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify research code and safety tests
+        run: |
+          python -m compileall -q research
+          python -m unittest discover -s research -p 'test_*.py' -q
+      - name: Recheck the November 20 real BTC ATR screenshot offset
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          python -m research.atr_reference_alignment --repo "${{ github.repository }}" --out test-output/atr_alignment.json
+      - name: Upload research-only time alignment diagnosis
+        uses: actions/upload-artifact@v4
+        with:
+          name: btc-atr-alignment-${{ github.run_id }}
+          path: test-output/atr_alignment.json
+          retention-days: 90
+          if-no-files-found: error
