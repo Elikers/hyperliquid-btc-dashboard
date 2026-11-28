@@ -13,9 +13,9 @@
 6. Do not request routine approvals or require repetitive ZIP downloads/PowerShell steps. If blocked, explain the precise authorization or external evidence needed.
 
 ## Known verified evidence, not a promise about current status
-- Latest PR research safety CI: [#46144538397](https://github.com/Elikers/hyperliquid-btc-dashboard/actions/runs/46144538397), and post-merge main safety CI: [#46144647290](https://github.com/Elikers/hyperliquid-btc-dashboard/actions/runs/46144647290); both passed **310 tests**.
+- Latest PR research safety CI: [#46144538397](https://github.com/Elikers/hyperliquid-btc-dashboard/actions/runs/46144538397), and post-merge main safety CI: [#46144647290](https://github.com/Elikers/hyperliquid-btc-dashboard/actions/runs/46144647290); both passed **316 tests**.
 - Verified full Hyperliquid capture and both artifact uploads: [GitHub Actions 44895884495](https://github.com/Elikers/hyperliquid-btc-dashboard/actions/runs/44895884495), **event=push**, success. [Evidence](research/VERIFIED_CAPTURE_RUN_2026-11-21.md).
-- Current redundant capture cron: `7,12,22,27,37,42,52,57 * * * *` UTC in [workflow](.github/workflows/btc-forward-capture.yml). Latest 100 Actions records: **81 successful scheduled captures, 0 scheduled failures**, but adjacent run starts are 45.5–90.67 minutes apart (median 59.3); do not claim 15-minute service or exact missed cron slots.
+- Current redundant capture cron: `7,12,22,27,37,42,52,57 * * * *` UTC in [workflow](.github/workflows/btc-forward-capture.yml). Latest 100 Actions records: **74 successful scheduled captures, 0 scheduled failures**, but adjacent run starts are 45.5–88 minutes apart (median 59.0); do not claim 15-minute service or exact missed cron slots.
 - Compact `btc-paper-evidence-<run_id>` artifacts: 30-day retention; full candles: 2-day retention. Deduplicate by timeframe + closedBarEndMs.
 - Macro-Off Classic: source-supported 7-factor configuration is coded; **exact Pine factor/signal parity remains unverified**. The prospective forward paper ledger now waits for a causally executable next open after the first observation.
 - One known ATR/SL mismatch: +0.2978 USDC research minus reference for a November 20 15m LONG, explained in [ATR diagnosis](research/FEED_PARITY_ATR_DIAGNOSIS_2026-11-21.md).
@@ -224,3 +224,12 @@ Update the current next-step blocker, most recent confirmed run links/commits, r
 - Latest scheduled capture #46143437673 had all four ZIP digests verified. Raw OHLCV: 2,600/1,300/650 contiguous unique bars, no gaps or duplicate timestamps; 30m/1h exactly reconstruct from 15m. Inner forward, historical-only and Lab SHA-256 checks passed.
 - The historical reference #44898036259 is a **push** audit smoke; #44897289838 is the first **scheduled** capture. Keep event types distinct.
 - Classic Macro-Off code still reflects EMA9/21 closed-bar cross, 5/7 factors, ADR14, ATR14 × 1.5 and 1R/2R/3R; independent original Pine bar exports remain unavailable. Next safe work: separately label historical next-open sensitivity and obtain independent, bar-aligned Pine outputs. Preserve Macro-On, Lab, Pages, and all research-only restrictions.
+
+
+## Verified next-open sensitivity and refreshed Actions audit — 2026-11-28 13:07 UTC
+
+- Current main d3ea4ac383470209dbb47f5607babffbe5138a27. PR #27 merged a separate historical next-bar-open sensitivity without replacing the signal-close baseline. PR #28 fixed the missing Counter import exposed by the first integration run. Main safety #46147969856 passed 316 tests.
+- Historical workflow #46147683092 initially failed in the new summary path; fixed and rerun #46147969896 succeeded. Artifact 15264457499 ZIP digest matched GitHub. 7 bps per-side historical sensitivity net R: 15m 23/23 -7.2424 baseline vs -7.2423 next-open; 30m 8/8 -3.2058 vs -3.2058; 1h 8/8 +0.1496 vs +0.1496. These are retrospective, overlapping Python-derived samples—not forward performance or Pine parity.
+- Latest 100 Actions: 74 successful scheduled captures, 0 failures; 73 adjacent gaps all exceed 15m (45.5m min, 59.0m median, 88m max). Three scheduled daily audits succeeded, all pre-PR-25. The Nov 28 scheduled SHORT SL was noncausal and must be discarded. Corrected push smoke #46144647222 leaves one 1h SHORT OPEN after 20 bars; no resolved trades. The next scheduled daily audit after the causal correction is still unverified.
+- Latest scheduled capture #46143437673: four artifact ZIP digests and inner Classic/historical/Lab digests verified; raw 2,600/1,300/650 bars had no duplicate timestamps/gaps and 30m/1h reconstructed exactly from 15m.
+- Preserve EMA9/21, 5/7 Macro-Off, ADR14, ATR14 x 1.5 and 1R/2R/3R. Original Pine 15m/30m/1h exports remain unavailable, so factor/event/ATR parity remains blocked. Macro-On eight-factor and experimental Lab remain separate; Pages unchanged; Discord, wallet orders and automatic trading remain off.
