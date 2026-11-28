@@ -8,6 +8,8 @@ on:
     paths:
       - '.github/workflows/btc-paper-audit.yml'
       - 'research/collect_forward_artifacts.py'
+      - 'research/forward_paper_ledger.py'
+      - 'research/test_forward_paper_ledger.py'
 permissions:
   contents: read
   actions: read

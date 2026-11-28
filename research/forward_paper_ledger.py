@@ -97,7 +97,7 @@ def _check_record(record):
 
 
 def analyze_forward_records(records,*,one_way_cost_bps=7):
-    """Analyze independently captured compact records, not original Pine signals."""
+    """Analyze records with a causal first-open-after-observation entry model."""
     cost=_valid_number(one_way_cost_bps)
     if not 0<=cost<=100:
         raise ValueError("Hypothetical one-way cost must be 0..100 bps")
@@ -112,8 +112,7 @@ def analyze_forward_records(records,*,one_way_cost_bps=7):
             candidate={"captureTime":stamp,"data":item}
             if end in key:
                 prior=key[end]["data"]
-                # Recorded market and model results must remain identical
-                # regardless of duplicate captures of the same closed bar.
+                # Repeated captures of a closed bar must carry identical data.
                 comparable=lambda obj:{k:v for k,v in obj.items() if k!="captureTime"}
                 if comparable(prior)!=comparable(item):
                     raise ValueError("Contradictory duplicate closed-bar evidence")
@@ -135,29 +134,71 @@ def analyze_forward_records(records,*,one_way_cost_bps=7):
                              "missingBars":(b-a)//step-1})
         audit["missingClosedBars"][tf]=sum(x["missingBars"] for x in gaps)
         for idx,signal_close in enumerate(ordered):
-            setup=per_tf[tf][signal_close]["data"]
+            signal_record=per_tf[tf][signal_close]
+            setup=signal_record["data"]
             side=setup["hypotheticalDirection"]
             if side is None:
                 continue
-            entry,stop,targets=_levels(setup["hypotheticalRiskLadder"],side)
+            reference_entry,reference_stop,_=_levels(
+                setup["hypotheticalRiskLadder"],side)
             sign=1 if side=="LONG" else -1
-            risk=abs(entry-stop)
+            risk=abs(reference_entry-reference_stop)
+            capture_time=signal_record["captureTime"]
+            capture_ms=int(capture_time.timestamp()*1000)
+
+            # A capture is made after the signal candle closes. Any later
+            # candle whose OPEN already occurred before that observation was
+            # not executable and must never settle this hypothetical trade.
+            later=ordered[idx+1:]
+            pre_observation=[close for close in later
+                if int(per_tf[tf][close]["data"]["closedBarStartMs"])<capture_ms]
+            executable=next((close for close in later
+                if int(per_tf[tf][close]["data"]["closedBarStartMs"])>=capture_ms),None)
+            if executable is None:
+                trades.append({
+                    "timeframe":tf,"side":side,"signalCloseMs":signal_close,
+                    "firstObservedAtUtc":capture_time.isoformat(),
+                    "preObservationOpensExcluded":len(pre_observation),
+                    "firstExecutableBarOpenMs":None,"entryTimeCausal":False,
+                    "entryPrice":None,"signalReferenceEntry":reference_entry,
+                    "riskDistance":risk,"exitCloseMs":None,
+                    "outcome":"AWAITING_CAUSAL_ENTRY","forwardBarsObserved":0,
+                    "grossR":None,"hypotheticalNetR":None,
+                    "researchOnly":True,"discordEligible":False})
+                continue
+
+            entry_item=per_tf[tf][executable]["data"]
+            entry_open_ms=int(entry_item["closedBarStartMs"])
+            if entry_open_ms<capture_ms or executable<=signal_close:
+                raise ValueError("Noncausal executable entry chronology")
+            entry_bar=entry_item["bar"]
+            entry=_valid_number(entry_bar["o"])
+            stop=entry-sign*risk
+            targets=[entry+sign*risk*n for n in (1,2,3)]
+            if entry<=0 or stop<=0 or any(x<=0 for x in targets):
+                raise ValueError("Causally re-anchored risk ladder crosses zero")
+
             be=False
             outcome="OPEN"
             exit_price=None
             exit_close=None
             seen=0
-            for future_close in ordered[idx+1:]:
-                if future_close!=signal_close+(seen+1)*step:
+            previous_close=None
+            for future_close in ordered[ordered.index(executable):]:
+                if previous_close is not None and future_close!=previous_close+step:
                     outcome="DATA_GAP"
                     break
                 seen+=1
                 bar=per_tf[tf][future_close]["data"]["bar"]
+                opened=_valid_number(bar["o"])
                 high,low=_valid_number(bar["h"]),_valid_number(bar["l"])
                 current_stop=entry if be else stop
-                if low<=current_stop if side=="LONG" else high>=current_stop:
+                stop_hit=low<=current_stop if side=="LONG" else high>=current_stop
+                if stop_hit:
+                    # Model adverse gaps through the active stop at the bar open.
+                    exit_price=(min(current_stop,opened) if side=="LONG"
+                                else max(current_stop,opened))
                     outcome="BE" if be else "SL"
-                    exit_price=current_stop
                     exit_close=future_close
                     break
                 if high>=targets[0] if side=="LONG" else low<=targets[0]:
@@ -167,36 +208,50 @@ def analyze_forward_records(records,*,one_way_cost_bps=7):
                     exit_price=targets[2]
                     exit_close=future_close
                     break
+                previous_close=future_close
             gross=None if exit_price is None else sign*(exit_price-entry)/risk
             net=None if exit_price is None else gross-(cost/10000)*(entry+exit_price)/risk
-            trades.append({"timeframe":tf,"side":side,"signalCloseMs":signal_close,
-                "firstObservedAtUtc":per_tf[tf][signal_close]["captureTime"].isoformat(),
-                "exitCloseMs":exit_close,"outcome":outcome,
-                "forwardBarsObserved":seen,"grossR":gross,"hypotheticalNetR":net,
+            trades.append({
+                "timeframe":tf,"side":side,"signalCloseMs":signal_close,
+                "firstObservedAtUtc":capture_time.isoformat(),
+                "preObservationOpensExcluded":len(pre_observation),
+                "firstExecutableBarOpenMs":entry_open_ms,
+                "entryTimeCausal":True,"entryPrice":entry,
+                "signalReferenceEntry":reference_entry,"riskDistance":risk,
+                "stop":stop,"targets":targets,
+                "exitCloseMs":exit_close,"exitPrice":exit_price,
+                "outcome":outcome,"forwardBarsObserved":seen,
+                "grossR":gross,"hypotheticalNetR":net,
                 "researchOnly":True,"discordEligible":False})
         sample=[x for x in trades if x["timeframe"]==tf]
         resolved=[x for x in sample if x["grossR"] is not None]
-        summary[tf]={"uniqueClosedBars":len(ordered),
-                     "missingBars":audit["missingClosedBars"][tf],
-                     "hypotheticalCandidates":len(sample),
-                     "resolved":len(resolved),
-                     "unresolved":len(sample)-len(resolved),
-                     "outcomes":dict(Counter(x["outcome"] for x in sample)),
-                     "grossRSum":sum(x["grossR"] for x in resolved),
-                     "illustrativeNetRSum":sum(x["hypotheticalNetR"] for x in resolved)}
-    return {"kind":"research_only_forward_paper_replay_v1",
-            "evidence":audit,"byTimeframe":summary,"trades":trades,
-            "oneWayCostBpsHypothesis":cost,
-            "assumptions":["First capture of each closed bar; repeated observations deduplicated",
-                "Only later uninterrupted closed bars resolve hypothetical trades",
-                "Stop wins when stop and target both touched within one bar",
-                "Full notional exits at TP3/SL/BE; TP1 only moves future stop to breakeven",
-                "Overlapping candidates are not a portfolio equity model",
-                "Illustrative fees and slippage are not measured execution",
-                "Unverified original Pine parity; no live signal authorization"],
-            "originalViprasolVerified":False,"discordEligible":False,
-            "automaticTrading":False,"profitableStrategyVerified":False}
-
+        summary[tf]={
+            "uniqueClosedBars":len(ordered),
+            "missingBars":audit["missingClosedBars"][tf],
+            "hypotheticalCandidates":len(sample),
+            "resolved":len(resolved),
+            "unresolved":len(sample)-len(resolved),
+            "awaitingCausalEntry":sum(x["outcome"]=="AWAITING_CAUSAL_ENTRY" for x in sample),
+            "outcomes":dict(Counter(x["outcome"] for x in sample)),
+            "grossRSum":sum(x["grossR"] for x in resolved),
+            "illustrativeNetRSum":sum(x["hypotheticalNetR"] for x in resolved)}
+    return {
+        "kind":"research_only_forward_paper_replay_v2_causal_open",
+        "evidence":audit,"byTimeframe":summary,"trades":trades,
+        "oneWayCostBpsHypothesis":cost,
+        "assumptions":[
+            "First capture of each closed bar; repeated observations deduplicated",
+            "A capture occurs after the signal close; observed bars opened before that capture are excluded from executable entries",
+            "Entry is the first later observed candle open at or after the first observation timestamp",
+            "ATR14 x 1.5 risk distance from the signal ladder is preserved and 1R/2R/3R levels are re-anchored around that executable open",
+            "Only uninterrupted bars from the executable entry bar onward resolve a hypothetical trade; later gaps produce DATA_GAP",
+            "Stop wins when stop and target are both touched within one bar; stop gaps are priced adversely at the bar open",
+            "Full notional exits at TP3/SL/BE; TP1 only moves the stop to breakeven on later bars",
+            "The 7 bps default is an illustrative one-way cost per side applied to entry plus exit notional, not measured execution",
+            "Overlapping candidates are not a portfolio equity model",
+            "Unverified original Pine parity; no live signal authorization"],
+        "originalViprasolVerified":False,"discordEligible":False,
+        "automaticTrading":False,"profitableStrategyVerified":False}
 
 def main():
     parser=argparse.ArgumentParser(description="Research-only paper outcome audit of extracted forward_observation.json artifacts")
