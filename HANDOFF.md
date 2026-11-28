@@ -2,7 +2,7 @@
 
 **Repo:** https://github.com/Elikers/hyperliquid-btc-dashboard
 **Dashboard:** https://elikers.github.io/hyperliquid-btc-dashboard/
-**Last reviewed:** 2026-11-28, Asia/Manila
+**Last reviewed:** 2026-11-28 22:49 Asia/Manila
 
 ## Mandatory bootstrap (do this instead of asking the user to repeat prior work)
 1. Use the connected GitHub integration to read `PROJECT_STATE.md`, `DECISIONS.md`, `HANDOFF.md` and `research/VERIFICATION_STATUS.md`. These are state snapshots, not proof that current CI is healthy.
@@ -15,7 +15,7 @@
 ## Known verified evidence, not a promise about current status
 - Latest PR research safety CI: [#46144538397](https://github.com/Elikers/hyperliquid-btc-dashboard/actions/runs/46144538397), and post-merge main safety CI: [#46144647290](https://github.com/Elikers/hyperliquid-btc-dashboard/actions/runs/46144647290); both passed **316 tests**.
 - Verified full Hyperliquid capture and both artifact uploads: [GitHub Actions 44895884495](https://github.com/Elikers/hyperliquid-btc-dashboard/actions/runs/44895884495), **event=push**, success. [Evidence](research/VERIFIED_CAPTURE_RUN_2026-11-21.md).
-- Current redundant capture cron: `7,12,22,27,37,42,52,57 * * * *` UTC in [workflow](.github/workflows/btc-forward-capture.yml). Latest 100 Actions records: **74 successful scheduled captures, 0 scheduled failures**, but adjacent run starts are 45.5–88 minutes apart (median 59.0); do not claim 15-minute service or exact missed cron slots.
+- Current redundant capture cron: `7,12,22,27,37,42,52,57 * * * *` UTC in [workflow](.github/workflows/btc-forward-capture.yml). Latest 100 Actions records at 2026-11-28 14:49 UTC: **68 successful scheduled captures, 0 failures**, with 47.48–88.00 minute adjacent start gaps (median 58.60); all 67 gaps exceed 15 minutes. Do not claim continuous 15m service or exact missed cron slots.
 - Compact `btc-paper-evidence-<run_id>` artifacts: 30-day retention; full candles: 2-day retention. Deduplicate by timeframe + closedBarEndMs.
 - Macro-Off Classic: source-supported 7-factor configuration is coded; **exact Pine factor/signal parity remains unverified**. The prospective forward paper ledger now waits for a causally executable next open after the first observation.
 - One known ATR/SL mismatch: +0.2978 USDC research minus reference for a November 20 15m LONG, explained in [ATR diagnosis](research/FEED_PARITY_ATR_DIAGNOSIS_2026-11-21.md).
@@ -259,3 +259,14 @@ Update the current next-step blocker, most recent confirmed run links/commits, r
 - #44898036259 is the Nov 21 **push** daily-audit smoke with only two observed records; #44897289838 is the first **scheduled** capture. Neither zero trades nor two bars imply profitability.
 - Macro-Off forward model remains 7 factors/5-of-7, EMA9/21, ADR14, ATR14×1.5 and 1R/2R/3R. Original Pine identity/mapping is documented in `research/PINE_SOURCE_PARITY_MATRIX_2026-11-28.md`, but independent numerical parity exports remain unavailable. Preserve Macro-On eight-factor and Lab separately; keep Pages/source settings unchanged.
 - No source code change was justified. Keep Discord/wallet/automatic trading disabled and profitability unproven. Next gate: inspect the first genuine scheduled daily audit after the causal ledger fix (configured 23:28 UTC), then continue independent Pine parity work.
+
+## Latest connected-GitHub QA snapshot — 2026-11-28 14:49 UTC
+
+- Current main [087faf07c6ec911b3df15f66053b3bcde8136d6b](https://github.com/Elikers/hyperliquid-btc-dashboard/commit/087faf07c6ec911b3df15f66053b3bcde8136d6b); PR #31 merged. PR safety #46151017428 and main safety #46151049614 both passed 316 tests.
+- Latest-100 Actions: 68/68 successful scheduled capture runs, no capture failures; adjacent run-start gaps 47.48m minimum, 58.60m median, 88m maximum, all above 15m. Latest scheduled capture #46153907829 succeeded at 14:17:37 UTC.
+- Capture artifacts: all four ZIP digests and embedded forward/Lab/historical digests verified. Raw candles 2,600/1,300/650; zero duplicates/internal gaps, valid OHLCV. 30m/1h bars reconstruct exactly over the common 15m sample, except the first 30m and 1h bars are left-edge incomplete because the 15m archive begins one 15m bar later. Historical-only 24h archive 96/48/24 is not forward evidence.
+- Three genuine scheduled daily audits #45726652713, #45915791456 and #46086453006 succeeded on pre-PR-25 SHA 24ca357; all three artifact ZIPs verified. Nov 26: 23 records, 1 duplicate, 3 candidates (two DATA_GAP, one OPEN), 0 resolved. Nov 27: 23 records, no duplicates/candidates/trades. Nov 28: 23 records, no duplicates, one reported 1h SHORT SL that is noncausal (bar opened 15:00Z before first observation 15:40:23Z); discard. Internal missing bars were 71/24/2, 70/24/1, 70/24/1 (15m/30m/1h); all use illustrative 7 bps per-side cost and all profitability flags false.
+- Corrected post-PR-25 daily audit #46144647222 is a **push** smoke, not schedule: 24 records, zero duplicates, internal missing bars 66/22/0, 24/96, 24/48, 24/24 coverage, one causal 1h SHORT OPEN after 20 bars, zero resolved. First observation 15:40:23Z; first executable open 16:00Z at 60,089. 7 bps/side illustrative only. The next daily schedule at 23:28 UTC had not yet run at audit time.
+- Historical-backtest push #46147683092 failed due to missing Counter after 315 tests; fixed, and push rerun #46147969896 succeeded after 316 tests. No scheduled capture/daily-audit failure was found. Historical reference #44898036259 is a push smoke with only two records; first scheduled capture #44897289838 is separate. Neither establishes profitability.
+- Original Pine source SHA reverified as 00d41c3abfccb3747506185bf0515684b5d8cdaa4b85c4546384914e623f34de. Macro-Off is explicit override (seven factors, 5/7); EMA9/21, ADR14, ATR14×1.5, 1R/2R/3R preserved. VWAP anchor, lower-timeframe RSI merge, DMI/ATR initialization, ADR boundary and missing-ADR behavior remain unverified. No independent 15m/30m/1h zero-signal-inclusive Pine exports were found.
+- No source code changes were justified. Preserve Macro-On eight-factor, Lab, docs/ chart, original settings and all research-only flags. No paid feeds, secrets, Discord trade alerts, wallet orders or automatic trading. Profitability remains unproven.
