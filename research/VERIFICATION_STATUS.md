@@ -4,7 +4,7 @@ Updated: 2026-11-28
 ## Reality check
 
 - Public Hyperliquid BTC candlestick/last-trade chart: confirmed working by the user.
-- GitHub Actions capture: **81 successful event=schedule runs** in the latest 100 Actions records, no scheduled failures; adjacent run starts are 45.5–90.67 minutes apart (median 59.3m), so 15-minute continuous coverage is **not** established.
+- GitHub Actions capture: **74 successful event=schedule runs** in the latest 100 Actions records, no scheduled failures; adjacent run starts are 45.5–88 minutes apart (median 59.0m), so 15-minute continuous coverage is **not** established.
 - Viprasol Classic Macro-Off: original source supports seven-factor mode; Python factors, session/VWAP/MTF merge, EMA events and ATR ladder remain **not Pine-parity certified**. Prospective forward fills now use a causal next open after observation.
 - Macro ON: exact `CME_MINI:NQ1!` continuous-futures data and roll/sessions missing.
 - Live Discord trade alerts: **disabled**.
@@ -29,7 +29,7 @@ This is a **single partial match**, not a statistically meaningful accuracy scor
 
 ## What counts as evidence
 
-The independent [parity evidence audit](parity_evidence.py) checks missed/extra LONG/SHORT events, candle-close timing, and Entry/SL/TP1/TP2/TP3 differences for each timeframe. The connected GitHub PR and post-merge safety suites most recently passed **310 tests** in [#46144538397](https://github.com/Elikers/hyperliquid-btc-dashboard/actions/runs/46144538397) and [#46144647290](https://github.com/Elikers/hyperliquid-btc-dashboard/actions/runs/46144647290). These tests verify code safety, not Pine parity.
+The independent [parity evidence audit](parity_evidence.py) checks missed/extra LONG/SHORT events, candle-close timing, and Entry/SL/TP1/TP2/TP3 differences for each timeframe. The connected GitHub PR and post-merge safety suites most recently passed **316 tests** in [#46144538397](https://github.com/Elikers/hyperliquid-btc-dashboard/actions/runs/46144538397) and [#46144647290](https://github.com/Elikers/hyperliquid-btc-dashboard/actions/runs/46144647290). These tests verify code safety, not Pine parity.
 
 No event collection or module in this repository has approval to send a live trading alert. A synthetic fixture, a 100% match on one event, or a single successful workflow run must not be represented as full original-Pine parity.
 
@@ -78,3 +78,14 @@ Obtain **bar-aligned independent Pine reference events** for macro-OFF Classic (
 - Scheduled capture #46143437673: all four ZIP artifact digests match GitHub. Raw data has 2,600/1,300/650 contiguous unique closed bars (15m/30m/1h), no duplicate timestamps or internal gaps, and exact 30m/1h OHLCV aggregation from 15m. Inner SHA-256 checks passed for forward, historical-only and Lab records.
 - Source review confirms configured Macro-Off rules (EMA9/21 closed-bar crossover, 5/7 seven-factor threshold, ADR14, ATR14 × 1.5, 1R/2R/3R). This is code review only. No independent original-Pine bar exports for all three timeframes are available; VWAP/session, RSI/MACD/ADX, 15m confirmation merge, ADR and ATR parity remain unverified. Macro-On and Lab are separate.
 - No code/test failure was found, so no code repair was justified. Historical replay remains an idealized signal-close baseline; a separately labeled next-open sensitivity remains outstanding. All flags remain false for Pine verification, Discord eligibility, automatic trading and profitability claims.
+
+
+## Verified historical next-open sensitivity and fresh Actions audit — 2026-11-28 13:07 UTC
+
+- PR #27 added a separate historical next-bar-open sensitivity to backtest_real_btc_snapshot.py; the original signal-close baseline remains unchanged. The sensitivity re-anchors the signal ATR14 x 1.5 risk around the next candle open, includes the entry candle in conservative stop-first OHLC checks, and applies 0/7/15 bps one-way cost scenarios. It is explicitly retrospective historical analysis, not forward evidence.
+- The first integration workflow #46147683092 exposed a missing Counter import in the new summary path. PR #28 fixed it and added a regression test; PR CI #46147882078 and main CI #46147969856 passed 316 tests. Rerun #46147969896 succeeded; artifact 15264457499 SHA-256 matched GitHub metadata.
+- Historical replay from source capture #46143437673 yielded 23/8/8 candidates (15m/30m/1h), all resolved in the retrospective OHLC model. At illustrative 7 bps per side, signal-close vs next-open net R was approximately 15m -7.2424 vs -7.2423, 30m -3.2058 vs -3.2058, 1h +0.1496 vs +0.1496. At 15 bps per side the sums were worse. The counts are small, overlapping and not independent out-of-sample; the result does not prove profitability or Pine parity.
+- Latest 100 Actions records: 74 successful scheduled captures, 0 failures, all 73 adjacent run-start gaps greater than 15m (45.5m min, 59.0m median, 88m max). Three scheduled daily audit runs succeeded, all on pre-PR-25 source. The Nov 28 scheduled 1h SHORT SL is noncausal (bar open preceded observation) and must not be counted. Corrected push smoke #46144647222 has one 1h SHORT OPEN after 20 bars and 0 resolved trades; 7 bps per-side is illustrative.
+- Latest scheduled capture #46143437673: all four artifact ZIP hashes match GitHub; raw candles 2,600/1,300/650, no duplicate timestamps or internal gaps; 30m/1h OHLCV exactly reconstruct from 15m. Inner hashes for compact Classic, historical-only archive and Lab observations pass.
+- The latest push audit #46147969896 reports 24 forward records, 0 duplicates, internal missing bars 66/22/0 (15m/30m/1h), and rolling 24h coverage 24/96, 24/48 and 23/24. One 1h SHORT remains OPEN; no resolved trades.
+- Original Pine bar-by-bar reference exports for 15m/30m/1h remain unavailable. Macro-Off settings remain EMA9/21, 5/7, ADR14, ATR14 x 1.5 and 1R/2R/3R; no independent factor, event, VWAP/session, MTF confirmation, ADR or ATR parity is certified. Macro-On eight-factor and Lab remain separate. Profitability, Discord eligibility and automatic trading remain false.
