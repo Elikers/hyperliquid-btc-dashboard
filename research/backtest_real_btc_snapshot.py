@@ -124,6 +124,71 @@ def _exit_simulation(candidate, future):
             "grossR":None,"oneWayCostsNetR":None}
 
 
+
+def _exit_simulation_next_open(candidate, entry_and_future_bars):
+    """Historical next-bar-open sensitivity, separate from signal-close baseline.
+
+    Re-anchor the signal's ATR risk distance around the next candle's open.
+    Include that entry candle in conservative stop-first OHLC outcome checks.
+    This is retrospective sensitivity analysis, never a forward observation.
+    """
+    if not entry_and_future_bars:
+        return {"status":"NO_NEXT_BAR","barsHeld":0,"entryPrice":None,
+                "stop":None,"targets":None,"exitPrice":None,"grossR":None,
+                "oneWayCostsNetR":None}
+    side=candidate["hypotheticalDirection"]
+    ladder=candidate["hypotheticalRiskLadder"]
+    if side not in ("LONG","SHORT") or not isinstance(ladder,dict):
+        raise ValueError("No qualifying candidate ladder")
+    reference_entry=float(ladder["entry"])
+    reference_stop=float(ladder["stop"])
+    if not all(isfinite(x) and x>0 for x in (reference_entry,reference_stop)):
+        raise ValueError("Invalid signal reference ladder")
+    risk=abs(reference_entry-reference_stop)
+    if risk<=0:
+        raise ValueError("Invalid signal ATR risk distance")
+    sign=1 if side=="LONG" else -1
+    entry=float(entry_and_future_bars[0]["o"])
+    stop=entry-sign*risk
+    targets=[entry+sign*risk*n for n in (1,2,3)]
+    if not all(isfinite(x) and x>0 for x in (entry,stop,*targets)):
+        raise ValueError("Re-anchored next-open ladder is invalid")
+    breakeven=False
+    for count,bar in enumerate(entry_and_future_bars,1):
+        opened,high,low=(float(bar[k]) for k in ("o","h","l"))
+        if not all(isfinite(x) for x in (opened,high,low)) or low>high:
+            raise ValueError("Invalid next-open sensitivity candle")
+        active_stop=entry if breakeven else stop
+        stop_hit=low<=active_stop if side=="LONG" else high>=active_stop
+        if stop_hit:
+            # Conservative adverse gap pricing after the entry bar.
+            exit_price=(min(active_stop,opened) if side=="LONG"
+                        else max(active_stop,opened))
+            gross=sign*(exit_price-entry)/risk
+            net={str(cost):gross-(cost/10000)*(entry+exit_price)/risk
+                 for cost in COSTS}
+            return {"status":"BE" if breakeven else "SL","barsHeld":count,
+                    "entryPrice":entry,"riskDistance":risk,"stop":stop,
+                    "targets":targets,"exitPrice":exit_price,"grossR":gross,
+                    "oneWayCostsNetR":net}
+        touched_tp1=high>=targets[0] if side=="LONG" else low<=targets[0]
+        touched_tp3=high>=targets[2] if side=="LONG" else low<=targets[2]
+        if touched_tp1:
+            breakeven=True
+        if touched_tp3:
+            exit_price=targets[2]
+            gross=sign*(exit_price-entry)/risk
+            net={str(cost):gross-(cost/10000)*(entry+exit_price)/risk
+                 for cost in COSTS}
+            return {"status":"TP3","barsHeld":count,"entryPrice":entry,
+                    "riskDistance":risk,"stop":stop,"targets":targets,
+                    "exitPrice":exit_price,"grossR":gross,
+                    "oneWayCostsNetR":net}
+    return {"status":"OPEN","barsHeld":len(entry_and_future_bars),
+            "entryPrice":entry,"riskDistance":risk,"stop":stop,
+            "targets":targets,"exitPrice":None,"grossR":None,
+            "oneWayCostsNetR":None}
+
 def backtest_research(snapshots, *, source_run_id=None, min_history_bars=650):
     candles,captured=validated_candles(snapshots,min_history_bars=min_history_bars)
     result={}
@@ -155,6 +220,7 @@ def backtest_research(snapshots, *, source_run_id=None, min_history_bars=650):
                 blocked+=1
                 continue
             outcome=_exit_simulation(candidate,bars[i+1:])
+            next_open=_exit_simulation_next_open(candidate,bars[i+1:])
             entries.append({
                 "timeframe":tf,"closedBarEndMs":bar["T"],
                 "side":candidate["hypotheticalDirection"],
@@ -164,7 +230,9 @@ def backtest_research(snapshots, *, source_run_id=None, min_history_bars=650):
                 "grossR":outcome["grossR"],
                 "netRByOneWayCostBps":outcome["oneWayCostsNetR"],
                 "outcome":outcome["status"],
-                "barsHeld":outcome["barsHeld"],"researchOnly":True
+                "barsHeld":outcome["barsHeld"],
+                "nextOpenSensitivity":next_open,
+                "researchOnly":True
             })
         frame=[t for t in entries if t["timeframe"]==tf]
         total=len(frame)
@@ -179,8 +247,24 @@ def backtest_research(snapshots, *, source_run_id=None, min_history_bars=650):
             segments[name]={"resolvedTrades":len(rr),
                 "illustrativeNetRSumAt7Bps":sum(t["netRByOneWayCostBps"]["7"] for t in rr),
                 "winRate":None if not rr else sum(t["netRByOneWayCostBps"]["7"]>0 for t in rr)/len(rr)}
+        next_open_rows=[t["nextOpenSensitivity"] for t in frame]
+        next_open_resolved=[x for x in next_open_rows if x["grossR"] is not None]
+        next_open_summary={
+            "entryModel":"NEXT_BAR_OPEN_WITH_SIGNAL_ATR_RISK_REANCHORED",
+            "candidateCount":len(next_open_rows),
+            "resolvedTrades":len(next_open_resolved),
+            "unresolvedTrades":len(next_open_rows)-len(next_open_resolved),
+            "outcomes":dict(Counter(x["status"] for x in next_open_rows)),
+            "grossRSum":sum(x["grossR"] for x in next_open_resolved),
+            "illustrativeNetRSumByOneWayCostBps":{
+                str(c):sum(x["oneWayCostsNetR"][str(c)] for x in next_open_resolved)
+                for c in COSTS},
+            "historicalSensitivityOnly":True,
+            "notForwardEvidence":True,
+        }
         result[tf]={
             "sourceClosedBars":len(bars),"eligibleClosedBars":checked,
+            "nextOpenSensitivity":next_open_summary,
             "rawEmaCrosses":raw_cross,"blockedCrosses":blocked,
             "hypotheticalCandidates":total,"resolvedTrades":len(resolved),
             "unresolvedTrades":total-len(resolved),
@@ -197,8 +281,10 @@ def backtest_research(snapshots, *, source_run_id=None, min_history_bars=650):
             "assumptions":[
                 "Candidate calculated only from closed bars at or before signal time",
                 "Historical source-derived Python Macro-Off approximation, NOT independently TradingView Pine-verified",
-                "All entries assume idealized signal-bar CLOSE execution, even if actual next open differs",
-                "Exit replay uses future closed-bar OHLC only; stop-first and adverse stop gap opens",
+                "Baseline entries assume idealized signal-bar CLOSE execution, even if actual next open differs",
+                "Separate next-open sensitivity enters at the next candle open and re-anchors the signal ATR14 x 1.5 risk distance; it does not replace the baseline",
+                "Next-open sensitivity is retrospective historical analysis, not a prospectively observed fill or forward result",
+                "Exit replay uses closed-bar OHLC only; stop-first and adverse stop-gap opens",
                 "TP1 moves later-bar stop to breakeven; full hypothetical exit TP3, SL, or BE",
                 "One-way illustrative combined fee/slippage sensitivity 0,7,15 bps, not measured fills",
                 "Unresolved trades excluded from sums; overlapping trades not realistic portfolio equity",
@@ -209,7 +295,8 @@ def backtest_research(snapshots, *, source_run_id=None, min_history_bars=650):
             "originalViprasolVerified":False,
             "independentForwardProfitable":False,
             "discordEligible":False,"automaticTrading":False,
-            "profitabilityClaimAllowed":False}
+            "profitabilityClaimAllowed":False,
+            "nextOpenSensitivityIsHistoricalNotForward":True}
 
 
 def fetch_latest_snapshots(repo,token,*,opener=_github_open):
