@@ -1,11 +1,11 @@
 # Signal-engine verification status
-Updated: 2026-11-21
+Updated: 2026-11-28
 
 ## Reality check
 
 - Public Hyperliquid BTC candlestick/last-trade chart: confirmed working by the user.
-- GitHub Actions capture every 15m: workflow committed; the latest successful scheduled run is **not verified** from available connector outputs.
-- Viprasol Classic macro OFF: the supplied original Pine Script supports the configuration, with 7-factor scoring. The source-equivalent Python calculations are **not yet certified**.
+- GitHub Actions capture: **82 successful event=schedule runs** in the latest 100 Actions records, no scheduled failures; adjacent run starts are 45.5–90.67 minutes apart (median 59.3m), so 15-minute continuous coverage is **not** established.
+- Viprasol Classic Macro-Off: original source supports seven-factor mode; Python factors, session/VWAP/MTF merge, EMA events and ATR ladder remain **not Pine-parity certified**. Prospective forward fills now use a causal next open after observation.
 - Macro ON: exact `CME_MINI:NQ1!` continuous-futures data and roll/sessions missing.
 - Live Discord trade alerts: **disabled**.
 - Continuous cloud signal worker: **not deployed**.
@@ -29,7 +29,7 @@ This is a **single partial match**, not a statistically meaningful accuracy scor
 
 ## What counts as evidence
 
-The independent [parity evidence audit](parity_evidence.py) checks missed/extra LONG/SHORT events, candle-close timing, and Entry/SL/TP1/TP2/TP3 differences for each timeframe. Its [10 regression tests](test_parity_evidence.py) were run successfully in the local development environment before commit. CI checks in GitHub remain separately unverified.
+The independent [parity evidence audit](parity_evidence.py) checks missed/extra LONG/SHORT events, candle-close timing, and Entry/SL/TP1/TP2/TP3 differences for each timeframe. The connected GitHub PR and post-merge safety suites most recently passed **310 tests** in [#46144538397](https://github.com/Elikers/hyperliquid-btc-dashboard/actions/runs/46144538397) and [#46144647290](https://github.com/Elikers/hyperliquid-btc-dashboard/actions/runs/46144647290). These tests verify code safety, not Pine parity.
 
 No event collection or module in this repository has approval to send a live trading alert. A synthetic fixture, a 100% match on one event, or a single successful workflow run must not be represented as full original-Pine parity.
 
@@ -55,3 +55,15 @@ Official external source: [TradingView's current docs](https://www.tradingview.c
 ### Strict next gate
 
 Obtain **bar-aligned independent Pine reference events** for macro-OFF Classic (including zero-signal closed bars) and measure exact per-factor, entry, SL, and TP agreement across all three chart timeframes. Then collect enough fresh forward samples for fee-adjusted expectancy and drawdown. No trading, Discord trade alerts, or claims of profitability before those gates.
+
+
+## Verified forward-audit and causal-entry status — 2026-11-28
+
+- [PR #25](https://github.com/Elikers/hyperliquid-btc-dashboard/pull/25) corrected the **prospective Classic forward ledger only**. A signal is first observed after its candle closes; any later bar whose open preceded that observation is excluded. The ledger waits for the first open at/after observation, preserves signal-time ATR14 × 1.5 risk distance, re-anchors 1R/2R/3R levels around that open, uses stop-first and adverse stop-gap pricing, and quarantines later missing bars. This does not change signal rules.
+- PR CI [#46144538397](https://github.com/Elikers/hyperliquid-btc-dashboard/actions/runs/46144538397) and post-merge main CI [#46144647290](https://github.com/Elikers/hyperliquid-btc-dashboard/actions/runs/46144647290) passed **310 tests**. The corrected daily audit [#46144647222](https://github.com/Elikers/hyperliquid-btc-dashboard/actions/runs/46144647222) succeeded with `event=push`; its ZIP artifact ID **15263132504** matched GitHub SHA-256 `9693630e726e29952b543865aff3aebacb961965e0e75970fc776d10523047d2`.
+- Corrected report: 24 source artifacts/records, 0 duplicates; rolling 24h coverage 15m **24/96**, 30m **24/48**, 1h **24/24**. One 1h SHORT remains OPEN after 20 observed bars; entry open at 16:00 UTC is after first observation at 15:40:23 UTC. **No resolved trades** and no profitability inference. 7 bps per-side cost is an illustrative assumption, not measured fees or fills.
+- The pre-fix scheduled report [#46086453006](https://github.com/Elikers/hyperliquid-btc-dashboard/actions/runs/46086453006) had counted an SL on a bar that opened before its first observation; that outcome was not causally executable and is superseded by the corrected ledger.
+- The latest 100 Actions records show 82 successful scheduled captures and no capture failures, but all 81 adjacent run-start intervals exceeded 15 minutes. The latest 24h audit reports 24 successful scheduled captures against 192 configured pilot opportunities; GitHub run creation timestamps do not establish exact missed slots. This is not continuous 15m sampling.
+- The historical replay module `backtest_real_btc_snapshot.py` still explicitly assumes idealized signal-bar-close entries. Treat those historical results as a separate baseline; next engineering work is a separately labeled next-open sensitivity, without changing Classic signals.
+- Independent authenticated TradingView Pine closed-bar exports for all 15m/30m/1h remain unavailable. The known +0.2978 USDC ATR stop difference remains unresolved; do not fit the ATR to one rounded screenshot. Macro-On still requires independently verified CME_MINI:NQ1! data and roll/session parity. Macro-On and Lab remain separate.
+- All flags remain false for original-Pine verification, Discord eligibility, automatic trading and profitability claims. No paid feeds, secrets, Discord trade alerts, wallet orders or automatic trading.
