@@ -4,6 +4,7 @@ Replays source-supported Python Macro-Off candidate logic. Not exact
 TradingView Pine parity, observed forward signals, or executable orders.
 No parameter fitting, no future candles used for candidate generation.
 """
+from collections import Counter
 from datetime import datetime, timezone
 import hashlib
 import io
@@ -189,6 +190,24 @@ def _exit_simulation_next_open(candidate, entry_and_future_bars):
             "targets":targets,"exitPrice":None,"grossR":None,
             "oneWayCostsNetR":None}
 
+
+def _summarize_next_open_sensitivity(rows):
+    """Summarize only the separate historical next-open sensitivity."""
+    resolved=[x for x in rows if x["grossR"] is not None]
+    return {
+        "entryModel":"NEXT_BAR_OPEN_WITH_SIGNAL_ATR_RISK_REANCHORED",
+        "candidateCount":len(rows),
+        "resolvedTrades":len(resolved),
+        "unresolvedTrades":len(rows)-len(resolved),
+        "outcomes":dict(Counter(x["status"] for x in rows)),
+        "grossRSum":sum(x["grossR"] for x in resolved),
+        "illustrativeNetRSumByOneWayCostBps":{
+            str(c):sum(x["oneWayCostsNetR"][str(c)] for x in resolved)
+            for c in COSTS},
+        "historicalSensitivityOnly":True,
+        "notForwardEvidence":True,
+    }
+
 def backtest_research(snapshots, *, source_run_id=None, min_history_bars=650):
     candles,captured=validated_candles(snapshots,min_history_bars=min_history_bars)
     result={}
@@ -248,20 +267,7 @@ def backtest_research(snapshots, *, source_run_id=None, min_history_bars=650):
                 "illustrativeNetRSumAt7Bps":sum(t["netRByOneWayCostBps"]["7"] for t in rr),
                 "winRate":None if not rr else sum(t["netRByOneWayCostBps"]["7"]>0 for t in rr)/len(rr)}
         next_open_rows=[t["nextOpenSensitivity"] for t in frame]
-        next_open_resolved=[x for x in next_open_rows if x["grossR"] is not None]
-        next_open_summary={
-            "entryModel":"NEXT_BAR_OPEN_WITH_SIGNAL_ATR_RISK_REANCHORED",
-            "candidateCount":len(next_open_rows),
-            "resolvedTrades":len(next_open_resolved),
-            "unresolvedTrades":len(next_open_rows)-len(next_open_resolved),
-            "outcomes":dict(Counter(x["status"] for x in next_open_rows)),
-            "grossRSum":sum(x["grossR"] for x in next_open_resolved),
-            "illustrativeNetRSumByOneWayCostBps":{
-                str(c):sum(x["oneWayCostsNetR"][str(c)] for x in next_open_resolved)
-                for c in COSTS},
-            "historicalSensitivityOnly":True,
-            "notForwardEvidence":True,
-        }
+        next_open_summary=_summarize_next_open_sensitivity(next_open_rows)
         result[tf]={
             "sourceClosedBars":len(bars),"eligibleClosedBars":checked,
             "nextOpenSensitivity":next_open_summary,

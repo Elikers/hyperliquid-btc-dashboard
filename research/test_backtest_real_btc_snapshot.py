@@ -4,7 +4,8 @@ from datetime import datetime,timezone
 
 from research.backtest_real_btc_snapshot import (
     backtest_research, validated_candles, select_raw_snapshots,
-    _exit_simulation, _exit_simulation_next_open, decode_snapshot_zip,
+    _exit_simulation, _exit_simulation_next_open,
+    _summarize_next_open_sensitivity, decode_snapshot_zip,
     fetch_latest_snapshots, SOURCE)
 from research.factors import STEPS
 
@@ -129,6 +130,22 @@ class RealHistoricalResearchTests(unittest.TestCase):
         self.assertEqual(out["status"],"NO_NEXT_BAR")
         self.assertIsNone(out["grossR"])
         self.assertIsNone(out["entryPrice"])
+
+    def test_next_open_summary_counts_only_resolved_outcomes(self):
+        summary=_summarize_next_open_sensitivity([
+            {"status":"TP3","grossR":3.0,
+             "oneWayCostsNetR":{"0":3.0,"7":2.9,"15":2.8}},
+            {"status":"OPEN","grossR":None,"oneWayCostsNetR":None},
+            {"status":"NO_NEXT_BAR","grossR":None,"oneWayCostsNetR":None},
+        ])
+        self.assertEqual(summary["candidateCount"],3)
+        self.assertEqual(summary["resolvedTrades"],1)
+        self.assertEqual(summary["unresolvedTrades"],2)
+        self.assertEqual(summary["outcomes"],{"TP3":1,"OPEN":1,"NO_NEXT_BAR":1})
+        self.assertEqual(summary["grossRSum"],3.0)
+        self.assertEqual(summary["illustrativeNetRSumByOneWayCostBps"]["7"],2.9)
+        self.assertTrue(summary["historicalSensitivityOnly"])
+        self.assertTrue(summary["notForwardEvidence"])
 
     def test_reject_unsupported_market_repo(self):
         with self.assertRaises(ValueError):
