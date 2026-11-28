@@ -81,3 +81,11 @@ The macro symbol default is `CME_MINI:NQ1!`, but it is not required in Macro-Off
 5. Preserve separate Macro-On eight-factor and experimental Lab paths. Do not alter source settings, dashboard/Pages, live alerts or trading permissions to make a comparison pass.
 
 **Status:** Original source identity and requested Macro-Off input mapping are now verified. Full numerical Pine parity, forward profitability and execution quality remain unverified. No paid feed, secret, Discord trade alert, wallet order or automatic trading is used or authorized.
+
+
+## Fresh raw-candle ATR recheck — 2026-11-28 16:50 UTC
+
+- Re-materialized the original Library Pine v6 file `Pasted text(20261120-173911).txt`: 64,246 bytes, SHA-256 `00d41c3abfccb3747506185bf0515684b5d8cdaa4b85c4546384914e623f34de`. Relevant source lines were rechecked: EMA/score inputs 45–56; macro OFF override 65–76; sessions/weekend 79–90; ADR14 92–98; ATR/risk 101–108; confirmation RSI 112–114; core indicators 208–216; factor votes 257–280; session/ADR logic 293–324; crossover and entry 468–495.
+- The current scheduled raw artifact [#46165868476](https://github.com/Elikers/hyperliquid-btc-dashboard/actions/runs/46165868476) contains the 2026-11-20 14:15–14:30 UTC 15m candle with OHLC 61,893 / 62,150 / 61,837 / 62,077, matching the saved screenshot note. Recomputed Python Wilder ATR14 from that historical candle and the full available raw series is 273.068130152965; 1.5× risk is 409.602195229447. The screenshot stop 61,667.1 implies about 409.9 risk, retaining the +0.2978 USDC difference. Starting the RMA history 0, 1, 10, 50, 100, 200, 500 or 1,000 earlier bars before the target yields the same ATR to displayed precision; simple warmup-length truncation does not explain the mismatch.
+- A fresh Library search found the existing 15m comparison note only; no independent 30m/1h reference exports or contiguous zero-signal-inclusive per-bar factor exports were found. This remains a genuine evidence blocker. Do not tune ATR or claim parity from one 15m screenshot.
+- No strategy code or settings changed. Macro-Off remains EMA9/21, seven factors with 5/7, ADR14, ATR14×1.5 and 1R/2R/3R; Macro-On eight-factor and Lab remain separate. Numerical Pine parity and profitability remain unverified.
